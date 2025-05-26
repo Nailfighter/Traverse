@@ -8,7 +8,7 @@ const Header = () => {
           State College
         </button>
         <button className="bg-white px-3 border border-l-0 border-bcolor hover:bg-gray-200">
-          7 Days in Aug
+          7 Days
         </button>
         <button className="bg-white px-3 border border-l-0 border-bcolor hover:bg-gray-200">
           2 People
