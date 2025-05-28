@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@plugin './hero.ts';
+@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
 
 @font-face {
   font-family: "Poppins";
@@ -121,7 +124,6 @@ body {
   padding: 0;
 }
 
-
 button:hover {
   cursor: pointer;
   background-color: var(--color-bcolor);
@@ -132,4 +134,12 @@ button:hover {
 }
 .button-animation button:hover {
   transform: scale(1.1);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

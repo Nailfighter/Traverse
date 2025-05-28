@@ -4,7 +4,7 @@ import {
   PlusIcon,
   MagnifyingGlassIcon,
   UserCircleIcon,
-  GlobeAsiaAustraliaIcon,
+  
 } from "@heroicons/react/24/solid";
 
 const RecentTrip = () => {
@@ -13,9 +13,8 @@ const RecentTrip = () => {
 
 const SideBar = () => {
   return (
-    <div className="button-animation w-12 h-screen border-r-1 border-bcolor flex flex-col gap-5 p-[10px] ">
+    <div className="button-animation w-14 h-screen border-r-1 border-bcolor flex flex-col gap-5 p-[10px] ">
       <button>
-        <GlobeAsiaAustraliaIcon className="mb-3" />
       </button>
       <button>
         <PlusIcon />

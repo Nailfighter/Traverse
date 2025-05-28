@@ -5,7 +5,7 @@ import MapCard from "./MapCard";
 
 const Layout = () => {
   return (
-    <div className="h-[96.45vh] overflow-hidden">
+    <div className="">
       <PanelGroup direction="horizontal">
         <Panel defaultSize={40} minSize={40}>
           <ContentCard />

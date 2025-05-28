@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { HeroUIProvider } from "@heroui/react";
 import "./App.css";
 
 import SideBar from "./components/SideBar.jsx";
@@ -7,12 +8,14 @@ import Layout from "./components/content/Layout.jsx";
 
 export default function App() {
   return (
-    <div className="flex flex-row w-screen h-screen ">
-      <SideBar />
-      <div className="content w-full h-full">
-        <Header />
-        <Layout />
+    <HeroUIProvider>
+      <div className="flex flex-row w-screen h-screen ">
+        <SideBar />
+        <div className="content w-full h-full">
+          <Header />
+          <Layout />
+        </div>
       </div>
-    </div>
+    </HeroUIProvider>
   );
 }

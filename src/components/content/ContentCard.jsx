@@ -19,41 +19,10 @@ const ContentCard = () => (
         </div>
       </div>
     </div>
-    <div className="px-6 py-4">
-      <DayTabs />
+    <div className="px-4 py-4">
       <Itinerary />
     </div>
   </div>
 );
-
-const DayTabs = () => {
-  const [activeTab, setActiveTab] = useState(1);
-
-  const tabs = [];
-  for (let i = 1; i <= 7; i++) {
-    tabs.push(
-      <button
-        key={i}
-        onClick={() => setActiveTab(i)}
-        className={`relative p-2 px-2.5  text-sm hover:text-black transition-colors duration-200 ${
-          activeTab === i
-            ? "text-black font-semibold "
-            : "text-subcolor hover:text-black"
-        }`}
-      >
-        Day {i}
-        <div
-          className={`absolute left-0 bottom-0 h-0.75 bg-black ${
-            activeTab === i ? "w-full" : "w-0"
-          }`}
-        ></div>
-      </button>
-    );
-  }
-
-  return (
-    <div className="flex flex-wrap border-b border-gray-300 mb-4">{tabs}</div>
-  );
-};
 
 export default ContentCard;
