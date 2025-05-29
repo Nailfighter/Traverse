@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useContext, useState } from "react";
 import { Button } from "@heroui/react";
 import { Tabs, Tab } from "@heroui/react";
 
@@ -23,10 +23,9 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
-import MockData from "./MockData.js";
 import PlaceCard from "./PlaceCard.jsx";
 
-const initialPlaces = MockData;
+import { PlacesContext } from "../../App.jsx";
 
 const TravelTime = ({ time, distance, mode }) => (
   <div className="flex text-[11px] items-center text-subcolor gap-1.5 font-medium w-full">
@@ -46,17 +45,16 @@ const TravelTime = ({ time, distance, mode }) => (
   </div>
 );
 
-const DayTabs = ({ setPlaces }) => {
+const DayTabs = ({ fullItinerary, setPlaces }) => {
   const [selected, setSelected] = useState("1");
-
-  const days = Object.keys(initialPlaces); // Dynamic days like ["1", "2", "3", ...]
+  const days = Object.keys(fullItinerary); // Dynamic days like ["1", "2", "3", ...]
 
   return (
     <Tabs
       selectedKey={selected}
       onSelectionChange={(key) => {
         setSelected(key);
-        setPlaces(initialPlaces[Number(key)] || []);
+        setPlaces(fullItinerary[Number(key)]);
       }}
       radius="full"
       variant="solid"
@@ -74,7 +72,9 @@ const DayTabs = ({ setPlaces }) => {
 };
 
 const Itinerary = () => {
-  const [places, setPlaces] = useState(initialPlaces[1]);
+  const { fullItinerary } = useContext(PlacesContext);
+  const [places, setPlaces] = useState(fullItinerary[1] || []);
+
   const [timeInfo, showTimeInfo] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -103,7 +103,7 @@ const Itinerary = () => {
           Add Place
         </Button>
       </div>
-      <DayTabs setPlaces={setPlaces} />
+      <DayTabs fullItinerary={fullItinerary} setPlaces={setPlaces} />
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

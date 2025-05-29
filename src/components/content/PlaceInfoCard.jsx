@@ -51,35 +51,31 @@ const PlaceInfoCard = ({ name, description, imageUrl, location }) => {
     <Card className="absolute bottom-4 left-4 p-2 w-140 h-auto">
       <CardBody className="overflow-visible">
         <div className="flex flex-col gap-4">
-          {/* Header with Toggle Button */}
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-semibold">Old Main</h1>
-            <Button
-              isIconOnly
-              variant="light"
-              size="sm"
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              {isOpen ? (
-                <ChevronUpIcon className="h-5 w-5" />
-              ) : (
-                <ChevronDownIcon className="h-5 w-5" />
-              )}
-            </Button>
+          <div>
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-semibold">Old Main</h1>
+              <Button
+                isIconOnly
+                variant="light"
+                size="sm"
+                onPress={() => setIsOpen(!isOpen)}
+                className="rounded-full p-1.5"
+              >
+                {isOpen ? <ChevronDownIcon /> : <ChevronUpIcon />}
+              </Button>
+            </div>
+            <div className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
+              <StarIcon className="h-4 w-4 text-[#fbbc04]" />
+              5.0
+              <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
+              47 Reviews
+              <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
+              State College, Pennsylvania
+            </div>
           </div>
 
-          {/* Content collapses below */}
           {isOpen && (
             <>
-              <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                <StarIcon className="h-4 w-4 text-[#fbbc04]" />
-                5.0
-                <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
-                47 Reviews
-                <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
-                State College, Pennsylvania
-              </div>
-
               <div className="grid grid-cols-2 gap-2">
                 <Image
                   className="h-full w-full object-cover rounded-l-xl"
