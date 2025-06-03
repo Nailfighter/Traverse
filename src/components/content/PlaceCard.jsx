@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -9,24 +9,60 @@ import { Image, Button } from "@heroui/react";
 
 import TimeSetter from "./TimeSetter.jsx";
 
-const VisitTime = ({ start, end }) => (
-  <div className="flex items-center gap-1">
-    <ClockIcon className="h-5 aspect-square text-subcolor" />
-    <TimeSetter time={start} />
-    <span className="text-sm text-subcolor">-</span>
-    <TimeSetter time={end} />
-    <Button
-      variant="bordered"
-      className="flex text-xs text-black font-medium border ml-1 h-8  border-bcolor rounded-full"
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-      }}
-    >
-      Details
-    </Button>
-  </div>
-);
+import { ExtraInfoContext } from "./Layout.jsx";
+import MockData from "../../MockData.js";
+
+const intialExtraInfo = MockData.ExtraInfo;
+
+const Base64Image = ({ name, base64 }) => {
+  return (
+    <img
+      alt={name}
+      className="w-28 aspect-square object-cover rounded-2xl shrink-0"
+      src={base64 ? `data:image/jpeg;base64,${base64}` : null}
+    />
+  );
+};
+
+const VisitTime = ({ placeID, base64, start, end }) => {
+  const { setExtraInfo } = useContext(ExtraInfoContext);
+
+  const handleDetailClick = () => {
+    fetch(`/api/place/${placeID}`).then((response) => {
+      if (response.ok) {
+        response.json().then((data) => {
+          data.image = base64;
+          setExtraInfo({
+            visible: true,
+            placeDetails: data,
+          });
+        });
+      } else {
+        console.error("Failed to fetch place details");
+      }
+    });
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <ClockIcon className="h-5 aspect-square text-subcolor" />
+      <TimeSetter time={start} />
+      <span className="text-sm text-subcolor">-</span>
+      <TimeSetter time={end} />
+      <Button
+        variant="bordered"
+        className="flex text-xs text-black font-medium border ml-1 h-8 border-bcolor rounded-full"
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+        onPress={handleDetailClick}
+      >
+        Details
+      </Button>
+    </div>
+  );
+};
 
 const PlaceCard = ({ place, index, showTimeInfo, handleDeletePlace }) => {
   const {
@@ -64,15 +100,15 @@ const PlaceCard = ({ place, index, showTimeInfo, handleDeletePlace }) => {
             <h2 className="text-lg font-semibold">{place.name}</h2>
             <p className="text-sm text-gray-600">{place.description}</p>
           </div>
-          <VisitTime start={place.start} end={place.end} />
+          <VisitTime
+            start={place.start}
+            end={place.end}
+            placeID={place.id}
+            base64={place.image}
+          />
         </div>
 
-        <Image
-          isBlurred
-          src={place.image}
-          alt={place.name}
-          className="w-28 aspect-square object-cover rounded-2xl shrink-0"
-        />
+        <Base64Image name={place.name} base64={place.image} />
       </div>
 
       <div className="absolute top-[-10px] left-[-10px] rounded-full bg-gray-800 h-6 w-6 text-[12px] font-semibold text-white flex items-center justify-center">

@@ -17,13 +17,13 @@ const MapCard = () => {
     <div className="relative w-full h-full">
       <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
         <div className="w-full h-full">
-          <Map
+          {/* <Map
             defaultZoom={16}
             defaultCenter={{ lat: 40.55019758059793, lng: -74.29959699120032 }}
-            mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}
+            // mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}
             // colorScheme = {ColorScheme.DARK}
             disableDefaultUI={true}
-          >
+          > */}
             {/* <AdvancedMarker
               position={{ lat: 40.55019758059793, lng: -74.29959699120032 }}
             >
@@ -31,7 +31,7 @@ const MapCard = () => {
             </AdvancedMarker>
 
             <Direction /> */}
-          </Map>
+          {/* </Map> */}
         </div>
       </APIProvider>
 

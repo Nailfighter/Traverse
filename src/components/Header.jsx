@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Button } from "@heroui/react";
 import {
   RangeCalendar,
@@ -13,6 +13,7 @@ import {
 } from "@heroui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { today, getLocalTimeZone } from "@internationalized/date";
+import { PlacesContext } from "../App.jsx";
 
 function CustomCalendar() {
   return (
@@ -89,7 +90,6 @@ const getItinerary = async () => {
 
 const Header = ({ setFullItinerary }) => {
   const [noOfTravelers, setNoOfTravelers] = React.useState(1);
-
   return (
     <div className="flex h-13 p-[10px] w-auto border-b-1 border-bcolor text-[12px] font-semibold">
       <Dropdown>

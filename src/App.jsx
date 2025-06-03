@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, use } from "react";
+import React, { useState } from "react";
 import { HeroUIProvider } from "@heroui/react";
 import "./App.css";
 
@@ -7,7 +7,7 @@ import Header from "./components/Header.jsx";
 import Layout from "./components/content/Layout.jsx";
 
 import MockData from "./MockData.js";
-const initialPlaces = MockData;
+const initialPlaces = MockData.Data;
 
 export const PlacesContext = React.createContext();
 
