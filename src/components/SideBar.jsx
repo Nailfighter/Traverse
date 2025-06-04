@@ -5,6 +5,8 @@ import {
   PaperAirplaneIcon,
 } from "@heroicons/react/24/solid";
 import { Button } from "@heroui/react";
+import TripForm from "./TripForm";
+
 const RecentTrip = () => {
   return (
     <Button
@@ -21,9 +23,7 @@ const SideBar = () => {
       <Button isIconOnly variant="light">
         <PaperAirplaneIcon className="rotate-[335deg] w-5 h-5" />
       </Button>
-      <Button isIconOnly variant="light">
-        <PlusIcon className="w-5 h-5" />
-      </Button>
+      <TripForm />
       <Button isIconOnly variant="light">
         <MagnifyingGlassIcon className="w-5 h-5" />
       </Button>

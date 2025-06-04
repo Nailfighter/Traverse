@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import fetch from "node-fetch";
-
+import { getPlacePhoto } from "./helpers/googleMaps.js";
 import itineraryRoutes from "./routes/itinerary.js";
 import placeRoutes from "./routes/place.js";
 
@@ -13,6 +12,7 @@ const PORT = process.env.SERVER_PORT || 3002;
 app.use("/api/itinerary", itineraryRoutes);
 app.use("/api/place", placeRoutes);
 
+// Test route in index
 app.get("/api/test", async (req, res) => {});
 
 app.listen(PORT, () => {

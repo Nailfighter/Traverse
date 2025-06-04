@@ -153,7 +153,6 @@ const Header = ({ setFullItinerary }) => {
             onPress={async () => {
               const itinerary = await getItinerary();
               if (itinerary) {
-                console.log("Itinerary fetched successfully:", itinerary);
                 setFullItinerary(itinerary);
               } else {
                 console.error("Failed to fetch itinerary");
