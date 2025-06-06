@@ -1,6 +1,7 @@
 import React, { useState, useEffect, use } from "react";
 import PlaceInfoCard from "./PlaceInfoCard.jsx";
 
+
 import {
   APIProvider,
   Map,
@@ -15,7 +16,6 @@ import {
 const MapCard = () => {
   return (
     <div className="relative w-full h-full">
-      <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
         <div className="w-full h-full">
           {/* <Map
             defaultZoom={16}
@@ -24,7 +24,7 @@ const MapCard = () => {
             // colorScheme = {ColorScheme.DARK}
             disableDefaultUI={true}
           > */}
-            {/* <AdvancedMarker
+          {/* <AdvancedMarker
               position={{ lat: 40.55019758059793, lng: -74.29959699120032 }}
             >
               <Pin background={"blue"} />
@@ -33,7 +33,6 @@ const MapCard = () => {
             <Direction /> */}
           {/* </Map> */}
         </div>
-      </APIProvider>
 
       <PlaceInfoCard />
     </div>

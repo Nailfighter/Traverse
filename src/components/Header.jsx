@@ -88,8 +88,7 @@ const getItinerary = async () => {
   }
 };
 
-const Header = ({ setFullItinerary }) => {
-  const [noOfTravelers, setNoOfTravelers] = React.useState(1);
+const Header = () => {
   return (
     <div className="flex h-13 p-[10px] w-auto border-b-1 border-bcolor text-[12px] font-semibold">
       <Dropdown>
@@ -110,59 +109,6 @@ const Header = ({ setFullItinerary }) => {
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
-
-      <div className="flex justify-center flex-1">
-        <div className="flex">
-          <Popover placement="bottom" backdrop="opaque" showArrow>
-            <PopoverTrigger>
-              <Button
-                radius="none"
-                className="bg-white px-3 border rounded-l-full h-auto text-[12px] font-semibold border-bcolor hover:bg-gray-200"
-              >
-                7 Days
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-2 pb-1 rounded-[18px] bg-gray-100">
-              <CustomCalendar />
-            </PopoverContent>
-          </Popover>
-
-          <Popover placement="bottom" backdrop="opaque" showArrow>
-            <PopoverTrigger>
-              <Button
-                radius="none"
-                className="bg-white px-3 border border-l-0  h-auto text-[12px] font-semibold border-bcolor hover:bg-gray-200"
-              >
-                {noOfTravelers} {noOfTravelers > 1 ? "People" : "Person"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-1 rounded-[18px] bg-gray-100">
-              <PeopleInput
-                setNoOfTravelers={setNoOfTravelers}
-                noOfTravelers={noOfTravelers}
-              />
-            </PopoverContent>
-          </Popover>
-
-          <BudgetInput />
-
-          <Button
-            radius="none"
-            variant="light"
-            className="bg-black px-3 h-auto text-[12px] font-semibold rounded-full text-white hover:!bg-[#2e2e2e] ml-4"
-            onPress={async () => {
-              const itinerary = await getItinerary();
-              if (itinerary) {
-                setFullItinerary(itinerary);
-              } else {
-                console.error("Failed to fetch itinerary");
-              }
-            }}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };

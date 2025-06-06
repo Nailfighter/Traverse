@@ -119,121 +119,122 @@ const PlaceInfoCard = () => {
   };
 
   return (
-    // extraInfo.visible &&
-    <Card className="absolute bottom-4 left-4 p-2 w-140 h-auto">
-      <CardBody className="overflow-visible">
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-semibold">
-                {placeDetails.displayName.text}
-              </h1>
-              <div className="flex items-center gap-2">
-                <a
-                  href={placeDetails.googleMapsUri}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    variant="bordered"
-                    className="flex items-center text-sm font-medium p-2.5 border border-bcolor rounded-full h-10"
-                  >
-                    <img
-                      src="/google-maps.png"
-                      alt="Google Maps Icon"
-                      className="h-full aspect-square"
-                    />
-                    Open in Maps
-                  </Button>
-                </a>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  onPress={() => setIsMinimized(!isMinimised)}
-                  className="rounded-full p-1.5"
-                >
-                  {isMinimised ? <ChevronDownIcon /> : <ChevronUpIcon />}
-                </Button>
-              </div>
-            </div>
-            {isMinimised && (
-              <div className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600">
-                <StarIcon className="h-4 w-4 text-[#fbbc04]" />
-                {placeDetails.rating}
-                <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
-                <a
-                  href={placeDetails.googleMapsLinks.reviewsUri}
-                  className="antialiased transition-all hover:text-black"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {`${placeDetails.userRatingCount} Reviews`}
-                </a>
-                <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
-                {`${placeDetails.postalAddress.locality}, ${placeDetails.postalAddress.administrativeArea}`}
-              </div>
-            )}
-          </div>
-
-          {isMinimised && (
-            <>
-              <div className="grid grid-cols-2 gap-2">
-                <Base64Image
-                  name={placeDetails.name}
-                  base64={placeDetails.image}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                {placeDetails.types.slice(0, 2).map((type, index) => (
-                  <Chip key={index} variant="shadow" className="h-6 text-xs">
-                    {type
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())}
-                  </Chip>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <MapPinIcon className="h-4.5 aspect-square" />
-                <span>{placeDetails.formattedAddress}</span>
-              </div>
-
-              {placeDetails.internationalPhoneNumber && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <PhoneIcon className="ml-0.5 h-4 aspect-square" />
-                  <span>{placeDetails.internationalPhoneNumber}</span>
-                </div>
-              )}
-
-              {placeDetails.websiteUri && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <GlobeAsiaAustraliaIcon className="h-4.5 aspect-square" />
+    extraInfo.visible && (
+      <Card className="absolute bottom-4 left-4 p-2 w-140 h-auto">
+        <CardBody className="overflow-visible">
+          <div className="flex flex-col gap-3">
+            <div>
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-semibold">
+                  {placeDetails.displayName.text}
+                </h1>
+                <div className="flex items-center gap-2">
                   <a
-                    href={placeDetails.websiteUri}
-                    className="text-blue-600 hover:underline"
+                    href={placeDetails.googleMapsUri}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {placeDetails.websiteUri}
+                    <Button
+                      variant="bordered"
+                      className="flex items-center text-sm font-medium p-2.5 border border-bcolor rounded-full h-10"
+                    >
+                      <img
+                        src="/google-maps.png"
+                        alt="Google Maps Icon"
+                        className="h-full aspect-square"
+                      />
+                      Open in Maps
+                    </Button>
                   </a>
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    onPress={() => setIsMinimized(!isMinimised)}
+                    className="rounded-full p-1.5"
+                  >
+                    {isMinimised ? <ChevronDownIcon /> : <ChevronUpIcon />}
+                  </Button>
+                </div>
+              </div>
+              {isMinimised && (
+                <div className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600">
+                  <StarIcon className="h-4 w-4 text-[#fbbc04]" />
+                  {placeDetails.rating}
+                  <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
+                  <a
+                    href={placeDetails.googleMapsLinks.reviewsUri}
+                    className="antialiased transition-all hover:text-black"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {`${placeDetails.userRatingCount} Reviews`}
+                  </a>
+                  <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
+                  {`${placeDetails.postalAddress.locality}, ${placeDetails.postalAddress.administrativeArea}`}
                 </div>
               )}
+            </div>
 
-              {placeDetails.regularOpeningHours?.weekdayDescriptions?.length >
-                0 && (
-                <HoursOfOperation
-                  weekHours={
-                    placeDetails.regularOpeningHours.weekdayDescriptions
-                  }
-                />
-              )}
-            </>
-          )}
-        </div>
-      </CardBody>
-    </Card>
+            {isMinimised && (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <Base64Image
+                    name={placeDetails.name}
+                    base64={placeDetails.image}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {placeDetails.types.slice(0, 2).map((type, index) => (
+                    <Chip key={index} variant="shadow" className="h-6 text-xs">
+                      {type
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </Chip>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <MapPinIcon className="h-4.5 aspect-square" />
+                  <span>{placeDetails.formattedAddress}</span>
+                </div>
+
+                {placeDetails.internationalPhoneNumber && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <PhoneIcon className="ml-0.5 h-4 aspect-square" />
+                    <span>{placeDetails.internationalPhoneNumber}</span>
+                  </div>
+                )}
+
+                {placeDetails.websiteUri && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <GlobeAsiaAustraliaIcon className="h-4.5 aspect-square" />
+                    <a
+                      href={placeDetails.websiteUri}
+                      className="text-blue-600 hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {placeDetails.websiteUri}
+                    </a>
+                  </div>
+                )}
+
+                {placeDetails.regularOpeningHours?.weekdayDescriptions?.length >
+                  0 && (
+                  <HoursOfOperation
+                    weekHours={
+                      placeDetails.regularOpeningHours.weekdayDescriptions
+                    }
+                  />
+                )}
+              </>
+            )}
+          </div>
+        </CardBody>
+      </Card>
+    )
   );
 };
 
