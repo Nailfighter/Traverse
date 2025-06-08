@@ -47,3 +47,12 @@ export async function getPlacePhoto(
   const buffer = await response.buffer();
   return buffer.toString("base64");
 }
+
+export async function getPlaceBanner(placeName) {
+  try {
+    const img = await getPlacePhoto(placeName, 1200, 800);
+    return { image: img };
+  } catch (err) {
+    return { error: `Could not fetch banner for "${place}"` };
+  }
+}

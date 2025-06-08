@@ -13,7 +13,7 @@ import {
 } from "@heroui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { today, getLocalTimeZone } from "@internationalized/date";
-import { PlacesContext } from "../App.jsx";
+import { AppContext } from "../App.jsx";
 
 function CustomCalendar() {
   return (
@@ -73,19 +73,6 @@ const BudgetInput = () => {
       {budgetOptions[budget]}
     </Button>
   );
-};
-
-const getItinerary = async () => {
-  try {
-    const response = await fetch("/api/itinerary/generate", {
-      method: "GET",
-    });
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Failed to fetch itinerary:", error);
-    return null;
-  }
 };
 
 const Header = () => {

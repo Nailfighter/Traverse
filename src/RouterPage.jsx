@@ -16,6 +16,7 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_KEY
 );
 
+
 const router = createBrowserRouter([
   {
     path: "/login",
@@ -27,7 +28,7 @@ const router = createBrowserRouter([
     loader: requireAuth, // Protect /app route
   },
   {
-    path: "*",
+    path: "/",
     loader: async () => {
       const {
         data: { session },

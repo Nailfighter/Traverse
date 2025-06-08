@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Form, Input, Checkbox, Button } from "@heroui/react";
+import React, { useState, useEffect, use } from "react";
+import { Alert, Form, Input, Checkbox, Button } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "./RouterPage";
 import { useNavigate } from "react-router-dom";
 
-function handleEmailSignIn({
+async function handleEmailLogin({
   email,
   password,
   rememberMe,
   fullName,
   isSigningUp,
   navigate,
+  setAuthErrorMessage,
 }) {
   if (rememberMe) {
     localStorage.setItem(
@@ -21,23 +22,24 @@ function handleEmailSignIn({
     localStorage.removeItem("rememberedInfo");
   }
 
-  (async () => {
-    const { data, error } = isSigningUp
-      ? await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { fullName } },
-        })
-      : await supabase.auth.signInWithPassword({ email, password });
+  setAuthErrorMessage("");
 
-    if (error) {
-      console.error("Authentication error:", error.message);
-      alert(`Error: ${error.message}`);
-    } else {
-      console.log("Authentication successful:", data);
-      navigate("/app");
-    }
-  })();
+  const { error } = isSigningUp
+    ? await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { fullName } },
+      })
+    : await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    setAuthErrorMessage(error.message);
+    return false;
+  } else {
+    setAuthErrorMessage("");
+    navigate("/app");
+    return true;
+  }
 }
 
 function handleGoogleSignIn({ email, password }) {
@@ -64,6 +66,7 @@ const AuthPage = () => {
     !!localStorage.getItem("rememberedInfo")
   );
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const [authErrorMessage, setAuthErrorMessage] = useState("");
 
   const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -112,8 +115,9 @@ const AuthPage = () => {
     return hasError;
   };
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
+
     if (validateCredentials()) return;
 
     const clickedButton = e.nativeEvent.submitter;
@@ -122,13 +126,14 @@ const AuthPage = () => {
       return;
     }
 
-    handleEmailSignIn({
+    await handleEmailLogin({
       email,
       password,
       rememberMe,
       fullName,
       isSigningUp,
       navigate,
+      setAuthErrorMessage,
     });
   };
 
@@ -162,10 +167,18 @@ const AuthPage = () => {
                 : "Enter your email and password to access your trips"}
             </p>
           </div>
-
+          {authErrorMessage && (
+            <Alert
+              color="danger"
+              title={authErrorMessage}
+              className="max-h-16"
+            />
+          )}
           <Form
-            className="w-full flex flex-col gap-12 items-center"
-            onSubmit={handleEmailSubmit}
+            className="w-full flex flex-col gap-8 items-center"
+            onSubmit={(e) => {
+              handleEmailSubmit(e);
+            }}
           >
             <motion.div
               layout
@@ -181,7 +194,10 @@ const AuthPage = () => {
                   placeholder="Enter your email"
                   className="w-full"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError("");
+                  }}
                   isInvalid={!!emailError}
                   errorMessage={emailError}
                 />
@@ -208,7 +224,10 @@ const AuthPage = () => {
                       placeholder="Enter your full name"
                       className="w-full"
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        if (fullNameError) setFullNameError("");
+                      }}
                       isInvalid={!!fullNameError}
                       errorMessage={fullNameError}
                     />
@@ -226,7 +245,10 @@ const AuthPage = () => {
                   className="w-full"
                   type={isVisible ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError("");
+                  }}
                   isInvalid={!!passwordError}
                   errorMessage={passwordError}
                   endContent={
@@ -274,7 +296,7 @@ const AuthPage = () => {
                 {isSigningUp ? "Sign Up" : "Sign In"}
               </Button>
 
-              {!isSigningUp && (
+              {/* {!isSigningUp && (
                 <Button
                   name="googleSignIn"
                   type="submit"
@@ -288,7 +310,7 @@ const AuthPage = () => {
                   />
                   Sign In with Google
                 </Button>
-              )}
+              )} */}
 
               <p className="text-center text-sm text-gray-600">
                 {isSigningUp ? (
@@ -325,7 +347,7 @@ const AuthPage = () => {
               </p>
             </motion.div>
 
-            <div className="flex items-center w-full gap-4 mt-2">
+            <div className="flex items-center w-full gap-4 ">
               <hr className="flex-grow border-gray-300" />
               <span className="text-sm text-gray-500">or</span>
               <hr className="flex-grow border-gray-300" />

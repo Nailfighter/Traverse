@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -16,87 +16,27 @@ import { today, getLocalTimeZone } from "@internationalized/date";
 
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { CurrencyDollarIcon } from "@heroicons/react/24/outline";
+
 import AutoPlaceInput from "./AutoPlaceInput";
+import { AppContext } from "../App";
 
-const NumberInput = ({ setNumber, number, max, unit }) => {
-  const increment = () => setNumber((c) => Math.min(max, c + 1));
-  const decrement = () => setNumber((c) => Math.max(1, c - 1));
+const getItinerary = async (tripDetails, accessToken) => {
+  try {
+    const response = await fetch("/api/trips/generate", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(tripDetails),
+    });
 
-  return (
-    <div className="min-w-39 flex justify-between items-center gap-2 rounded-xl p-1 py-1 w-fit text-sm font-medium text-[#81818a] bg-gray-100 hover:bg-gray-200">
-      <Button
-        isIconOnly
-        variant="light"
-        size="sm"
-        onPress={decrement}
-        className="text-xl text-[#a1a1aa]"
-        radius="full"
-      >
-        −
-      </Button>
-      <span className="min-w-[24px] text-center">
-        {number}{" "}
-        {unit === "people"
-          ? number === 1
-            ? "person"
-            : "people"
-          : unit === "days"
-          ? number === 1
-            ? "day"
-            : "days"
-          : unit}
-      </span>
-      <Button
-        isIconOnly
-        variant="light"
-        size="sm"
-        onPress={increment}
-        className="text-xl text-[#a1a1aa]"
-        radius="full"
-      >
-        +
-      </Button>
-    </div>
-  );
-};
-
-const BudgetInput = ({ budget, setBudget }) => {
-  const budgetOptions = {
-    Low: "500 - 1000 USD",
-    Medium: "1000 - 2500 USD",
-    High: "2500+ USD",
-  };
-
-  return (
-    <div className="w-full grid grid-cols-3 gap-4">
-      {Object.keys(budgetOptions).map((option, index) => (
-        <div
-          key={option}
-          className={`w-full flex flex-col gap-1 border-2 rounded-lg p-2 cursor-pointer ${
-            budget === option
-              ? "bg-gray-200 border-gray-200"
-              : "border-gray-200 hover:bg-gray-200"
-          }`}
-          onClick={() => setBudget(option)}
-        >
-          <div className="flex items-center justify-center">
-            {Array.from({ length: index + 1 }).map((_, i) => (
-              <CurrencyDollarIcon
-                key={i}
-                className="w-[28px] aspect-square text-[#282f32]"
-              />
-            ))}
-          </div>
-          <span className="block text-xs font-semibold text-[#282f32]">
-            {option}
-          </span>
-          <span className="text-xs font-medium text-[#81818a]">
-            {budgetOptions[option]}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch itinerary:", error);
+    return null;
+  }
 };
 
 export default function TripForm() {
@@ -107,12 +47,18 @@ export default function TripForm() {
   const [noOfTravelers, setNoOfTravelers] = useState(1);
   const [budget, setBudget] = useState("Low");
   const [preferences, setPreferences] = useState("");
+  const { accessToken } = useContext(AppContext);
 
   const [destinationError, setDestinationError] = useState(false);
 
-  useEffect(() => {
-    onOpen();
-  }, []);
+  const resetFields = () => {
+    setDestination("");
+    setStartDate(today(getLocalTimeZone()));
+    setNoOfDays(1);
+    setNoOfTravelers(1);
+    setBudget("Low");
+    setPreferences("");
+  };
 
   const handleTripCreation = () => {
     if (!destination.trim()) {
@@ -121,17 +67,30 @@ export default function TripForm() {
     }
     setDestinationError(false);
 
-    const tripParams = {
+    const tripDetails = {
+      title: `${noOfDays} Days in ${destination}`,
       destination,
-      startDate: startDate.toString(),
+      start_date: startDate.toString(),
+      end_date: startDate.add({ days: noOfDays }).toString(),
       noOfDays,
       noOfTravelers,
       budget,
-      preferences,
+      notes: preferences,
     };
 
-    console.log("Trip created:", tripParams);
-    onClose();
+    getItinerary(tripDetails, accessToken)
+      .then((data) => {
+        onClose();
+        resetFields();
+        if (data) {
+          console.log(data);
+        } else {
+          console.error("Failed to create itinerary");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   };
 
   return (
@@ -235,3 +194,84 @@ export default function TripForm() {
     </div>
   );
 }
+
+const NumberInput = ({ setNumber, number, max, unit }) => {
+  const increment = () => setNumber((c) => Math.min(max, c + 1));
+  const decrement = () => setNumber((c) => Math.max(1, c - 1));
+
+  return (
+    <div className="min-w-39 flex justify-between items-center gap-2 rounded-xl p-1 py-1 w-fit text-sm font-medium text-[#81818a] bg-gray-100 hover:bg-gray-200">
+      <Button
+        isIconOnly
+        variant="light"
+        size="sm"
+        onPress={decrement}
+        className="text-xl text-[#a1a1aa]"
+        radius="full"
+      >
+        −
+      </Button>
+      <span className="min-w-[24px] text-center">
+        {number}{" "}
+        {unit === "people"
+          ? number === 1
+            ? "person"
+            : "people"
+          : unit === "days"
+          ? number === 1
+            ? "day"
+            : "days"
+          : unit}
+      </span>
+      <Button
+        isIconOnly
+        variant="light"
+        size="sm"
+        onPress={increment}
+        className="text-xl text-[#a1a1aa]"
+        radius="full"
+      >
+        +
+      </Button>
+    </div>
+  );
+};
+
+const BudgetInput = ({ budget, setBudget }) => {
+  const budgetOptions = {
+    Low: "500 - 1000 USD",
+    Medium: "1000 - 2500 USD",
+    High: "2500+ USD",
+  };
+
+  return (
+    <div className="w-full grid grid-cols-3 gap-4">
+      {Object.keys(budgetOptions).map((option, index) => (
+        <div
+          key={option}
+          className={`w-full flex flex-col gap-1 border-2 rounded-lg p-2 cursor-pointer ${
+            budget === option
+              ? "bg-gray-200 border-gray-200"
+              : "border-gray-200 hover:bg-gray-200"
+          }`}
+          onClick={() => setBudget(option)}
+        >
+          <div className="flex items-center justify-center">
+            {Array.from({ length: index + 1 }).map((_, i) => (
+              <CurrencyDollarIcon
+                key={i}
+                className="w-[28px] aspect-square text-[#282f32]"
+              />
+            ))}
+          </div>
+          <span className="block text-xs font-semibold text-[#282f32]">
+            {option}
+          </span>
+          <span className="text-xs font-medium text-[#81818a]">
+            {budgetOptions[option]}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};

@@ -25,7 +25,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 import PlaceCard from "./PlaceCard.jsx";
 
-import { PlacesContext } from "../../App.jsx";
+import { AppContext } from "../../App.jsx";
 
 const TravelTime = ({ time, distance, mode }) => (
   <div className="flex text-[11px] items-center text-subcolor gap-1.5 font-medium w-full">
@@ -72,8 +72,8 @@ const DayTabs = ({ fullItinerary, setPlaces }) => {
 };
 
 const Itinerary = () => {
-  const { fullItinerary } = useContext(PlacesContext);
-  const [places, setPlaces] = useState(fullItinerary[1] || []);
+  const { currentTrip } = useContext(AppContext);
+  const [places, setPlaces] = useState(currentTrip.itinerary[1] || []);
 
   const [timeInfo, showTimeInfo] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor));
@@ -103,7 +103,7 @@ const Itinerary = () => {
           Add Place
         </Button>
       </div>
-      <DayTabs fullItinerary={fullItinerary} setPlaces={setPlaces} />
+      <DayTabs fullItinerary={currentTrip.itinerary} setPlaces={setPlaces} />
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
