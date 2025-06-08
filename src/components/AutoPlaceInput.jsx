@@ -60,7 +60,6 @@ const AutoPlaceInput = ({
     await place.fetchFields({
       fields: ["formattedAddress"],
     });
-
     setDestination(`${place.formattedAddress}`);
     setPredictions([]);
     setDestinationError(false);
@@ -137,9 +136,7 @@ const AutoPlaceInput = ({
               key={suggestion.key}
               onAction={() => handlePredictionClick(suggestion.placePrediction)}
               className={
-                index === activeIndex
-                  ? "bg-[#d4d4d8]"
-                  : "cursor-pointer"
+                index === activeIndex ? "bg-[#d4d4d8]" : "cursor-pointer"
               }
             >
               {suggestion.placePrediction.text

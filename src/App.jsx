@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { HeroUIProvider } from "@heroui/react";
 import "./App.css";
 
 import SideBar from "./components/SideBar.jsx";
 import Header from "./components/Header.jsx";
 import Layout from "./components/content/Layout.jsx";
+
 import { APIProvider } from "@vis.gl/react-google-maps";
 
 import MockData from "./MockData.js";
