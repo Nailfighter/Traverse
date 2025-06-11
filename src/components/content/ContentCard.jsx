@@ -42,8 +42,8 @@ const ContentCard = () => {
   }, [tripHeader]);
 
   return (
-    <div className="flex flex-col h-full max-h-full overflow-hidden">
-      {/* <div className="relative flex-grow-0 w-full h-80">
+    <div className="flex flex-col h-full max-h-full overflow-hidden ">
+      <div className="relative flex-grow-0 w-full h-80">
         <Base64Image
           name={tripHeader?.destination}
           base64={tripHeader?.banner || ""}
@@ -60,23 +60,11 @@ const ContentCard = () => {
             {formattedDate(tripHeader?.end_date)}
           </div>
         </div>
-      </div> */}
+      </div>
 
-      {/* Scrollable content area that takes remaining space */}
-      <div className="flex-1 overflow-y-auto bg-amber-300">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
         <div className="flex flex-col gap-2 px-4 pt-4 pb-4">
-          {/* <Itinerary /> */}
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
-          <div className="bg-red-400 h-30 w-full" />
+          <Itinerary />
         </div>
       </div>
     </div>

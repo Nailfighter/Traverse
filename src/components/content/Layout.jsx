@@ -14,9 +14,8 @@ const Layout = ({ emptyTrips }) => {
   });
 
   return (
-    <div className="h-full bg-amber-950 overflow-hidden">
-      <ContentCard />
-      {/* <ExtraInfoContext.Provider value={{ extraInfo, setExtraInfo }}>
+    <div className="h-full overflow-hidden">
+      <ExtraInfoContext.Provider value={{ extraInfo, setExtraInfo }}>
         {!emptyTrips && (
           <PanelGroup direction="horizontal">
             <Panel defaultSize={40} minSize={40}>
@@ -24,12 +23,12 @@ const Layout = ({ emptyTrips }) => {
             </Panel>
             <PanelResizeHandle />
             <Panel defaultSize={60} minSize={20} className="bg-gray-200">
-              {/* <MapCard /> */}
-      {/* </Panel>
+              <MapCard />
+            </Panel>
           </PanelGroup>
         )}
         {emptyTrips && <MapCard />}
-      </ExtraInfoContext.Provider> */}
+      </ExtraInfoContext.Provider>
     </div>
   );
 };

@@ -109,9 +109,9 @@ export default function App() {
           }}
         >
           <div className="flex flex-row w-screen h-screen max-h-screen overflow-hidden">
-            {/* <SideBar /> */}
+            <SideBar />
             <div className="w-full h-full flex flex-col overflow-hidden">
-              {/* <Header /> */}
+              <Header />
               <Layout emptyTrips={emptyTrips} />
             </div>
           </div>
