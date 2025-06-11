@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -47,7 +47,7 @@ export default function TripForm() {
   const [noOfTravelers, setNoOfTravelers] = useState(1);
   const [budget, setBudget] = useState("Low");
   const [preferences, setPreferences] = useState("");
-  const { accessToken } = useContext(AppContext);
+  const { accessToken, fetchData, emptyTrips } = useContext(AppContext);
 
   const [destinationError, setDestinationError] = useState(false);
 
@@ -77,27 +77,46 @@ export default function TripForm() {
       budget,
       notes: preferences,
     };
+    console.log("Trip Details:", tripDetails);
 
     getItinerary(tripDetails, accessToken)
       .then((data) => {
         onClose();
         resetFields();
-        if (data) {
-          console.log(data);
-        } else {
-          console.error("Failed to create itinerary");
+        if (!data || data.error) {
+          console.error(
+            "Failed to create trip:",
+            data?.error || "Unknown error"
+          );
+          return;
         }
+
+        fetchData();
       })
       .catch((err) => {
         console.error(err);
       });
   };
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (emptyTrips) {
+        onOpen();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [emptyTrips]);
+
   return (
-    <div>
-      <Button isIconOnly variant="light" onPress={onOpen} className="w-full">
-        <PlusIcon className="w-5 h-5" />
-      </Button>
+    <div className="p-2">
+      <button
+        variant="light"
+        onClick={onOpen}
+        className="w-full button-animation swivel hover:cursor-pointer"
+      >
+        <PlusIcon className="" />
+      </button>
 
       <Modal
         backdrop={"blur"}
@@ -105,6 +124,8 @@ export default function TripForm() {
         onClose={onClose}
         isKeyboardDismissDisabled={true}
         size="md"
+        isDismissable={!emptyTrips}
+        hideCloseButton={emptyTrips}
       >
         <ModalContent>
           {(onClose) => (
@@ -175,13 +196,15 @@ export default function TripForm() {
               </ModalBody>
 
               <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Cancel
-                </Button>
+                {!emptyTrips && (
+                  <Button color="danger" variant="light" onPress={onClose}>
+                    Cancel
+                  </Button>
+                )}
                 <Button
                   type="submit"
                   variant="light"
-                  className="bg-black px-3 h-auto text-[12px] font-semibold text-white hover:!bg-[#2e2e2e] ml-4"
+                  className="bg-black px-3 text-[12px] font-semibold text-white hover:!bg-[#2e2e2e] ml-4"
                   onPress={handleTripCreation}
                 >
                   Create Trip

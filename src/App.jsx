@@ -9,18 +9,34 @@ import { supabase } from "./RouterPage.jsx";
 
 import { APIProvider } from "@vis.gl/react-google-maps";
 
-import MockData from "./MockData.js";
-const initialPlaces = MockData.Data;
-
 export const AppContext = React.createContext();
+
+async function fetchTripItinerary(token, trip_id) {
+  try {
+    const response = await fetch(`/api/trips/${trip_id}/itinerary`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      return { error: `Failed to fetch itinerary for trip ${trip_id}` };
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    return { error: error.message };
+  }
+}
 
 export default function App() {
   const [accessToken, setAccessToken] = useState(null);
   const [allUserTrips, setAllUserTrips] = useState([]);
   const [currentTrip, setCurrentTrip] = useState({
     tripHeader: null,
-    itinerary: initialPlaces,
+    itinerary: null,
   });
+  const [emptyTrips, setEmptyTrips] = useState(true);
 
   const fetchAllTrips = async (token) => {
     try {
@@ -33,41 +49,70 @@ export default function App() {
       if (!response.ok) {
         throw new Error("Failed to fetch trips");
       }
-      const data = await response.json();
-      setAllUserTrips(data);
-      console.log("All User Trips:", data);
+      const allUserData = await response.json();
+      setAllUserTrips(allUserData);
+      setEmptyTrips(allUserData.length === 0);
       setCurrentTrip({
-        tripHeader: data[0],
-        itinerary: initialPlaces,
+        tripHeader: allUserData[0],
+        itinerary: null,
       });
     } catch (error) {
       console.error("Error fetching trips:", error);
     }
   };
 
+  const fetchData = async () => {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session.access_token;
+    setAccessToken(token);
+
+    await fetchAllTrips(token);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session.access_token;
-      setAccessToken(token);
-
-      await fetchAllTrips(token);
-    };
-
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchItinerary = async () => {
+      if (currentTrip.tripHeader && accessToken) {
+        const itineraryData = await fetchTripItinerary(
+          accessToken,
+          currentTrip.tripHeader.trip_id
+        );
+
+        if (itineraryData.error) {
+          console.error("Error fetching itinerary:", itineraryData.error);
+        } else {
+          setCurrentTrip((prev) => ({
+            ...prev,
+            itinerary: itineraryData,
+          }));
+        }
+      }
+    };
+
+    fetchItinerary();
+  }, [currentTrip.tripHeader]);
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
       <HeroUIProvider>
         <AppContext.Provider
-          value={{ currentTrip, setCurrentTrip, allUserTrips, accessToken }}
+          value={{
+            currentTrip,
+            setCurrentTrip,
+            allUserTrips,
+            accessToken,
+            fetchData,
+            emptyTrips,
+          }}
         >
-          <div className="flex flex-row w-screen h-screen ">
-            <SideBar />
-            <div className="content w-full h-full">
-              <Header />
-              <Layout />
+          <div className="flex flex-row w-screen h-screen max-h-screen overflow-hidden">
+            {/* <SideBar /> */}
+            <div className="w-full h-full flex flex-col overflow-hidden">
+              {/* <Header /> */}
+              <Layout emptyTrips={emptyTrips} />
             </div>
           </div>
         </AppContext.Provider>

@@ -1,48 +1,72 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 
-import { askGemini, generatePrompt } from "../helpers/gemini.js";
-import { getPlaceID, getPlacePhoto } from "../helpers/googleMaps.js";
+import {
+  askGemini,
+  generateItineraryPrompt,
+  generatePlacePrompt,
+} from "../helpers/gemini.js";
+import {
+  getPlaceID,
+  getPlacePhoto,
+  getPlaceDetails,
+} from "../helpers/googleMaps.js";
 import {
   createTrip,
   createItinerary,
-  getTripById,
+  renameTrip,
+  deleteTrip,
   getTripsByUserId,
   getItineraryByTripId,
+  updatePlaceInItinerary,
+  addPlaceToItinerary,
+  getPlaceExtraDetails,
+  getGooglePlaceID,
+  getImageByPlaceId,
+  deletePlaceFromItinerary,
 } from "../helpers/supabase.js";
 
 const router = express.Router();
 
-// Generate itinerary using Gemini AI
+// Helper function to verify JWT token
+async function verifyToken(req, res) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) {
+    res.status(401).json({ error: "No token provided" });
+    return null;
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded;
+  } catch (err) {
+    res.status(403).json({ error: "Invalid token" });
+    return null;
+  }
+}
+
+// Generate itinerary using Gemini AI (no auth check here, add if needed)
 router.post("/generate", async (req, res) => {
-  // Create trip in database
   const tripCreationResponse = await createTrip(req);
   if (tripCreationResponse.error) {
     return res.status(500).json({ error: tripCreationResponse.error });
   }
 
-  // Extract trip details from request body
   const { destination, noOfDays, noOfTravelers, budget, notes } = req.body;
-  const tripDetails = {
-    destination,
-    noOfDays,
-    noOfTravelers,
-    budget,
-    notes,
-  };
+  const tripDetails = { destination, noOfDays, noOfTravelers, budget, notes };
 
-  // Generate itinerary prompt and ask Gemini AI
-  const itineraryPrompt = generatePrompt(tripDetails);
+  const itineraryPrompt = generateItineraryPrompt(tripDetails);
   try {
     const response = await askGemini(itineraryPrompt);
     const cleaned = response.text.replace(/```(?:json)?/g, "").trim();
-    const genneratedItinerary = JSON.parse(cleaned);
+    const generatedItinerary = JSON.parse(cleaned);
+
     await Promise.all(
-      Object.keys(genneratedItinerary).map((day) =>
+      Object.keys(generatedItinerary).map((day) =>
         Promise.all(
-          genneratedItinerary[day].map(async (place) => {
+          generatedItinerary[day].map(async (place) => {
             try {
-              place.id = await getPlaceID(place.name);
+              place.id = await getPlaceID(place.name, destination);
               place.image = await getPlacePhoto(place.name);
             } catch (err) {
               console.warn(`Failed for ${place.name}: ${err.message}`);
@@ -53,10 +77,9 @@ router.post("/generate", async (req, res) => {
       )
     );
 
-    // Create itinerary in database
     const itineraryCreationResponse = await createItinerary(
       tripCreationResponse.trip_id,
-      genneratedItinerary
+      generatedItinerary
     );
 
     res.json(itineraryCreationResponse);
@@ -69,56 +92,193 @@ router.post("/generate", async (req, res) => {
 
 // Get all trips for a user
 router.get("/", async (req, res) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
 
-  if (!token) return res.status(401).json({ error: "No token provided" });
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user_id = decoded.sub;
-
-    const trips = await getTripsByUserId(user_id);
-    if (trips.error) {
-      return res.status(500).json({ error: trips.error });
-    }
-
-    res.json(trips);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const user_id = decoded.sub;
+  const trips = await getTripsByUserId(user_id);
+  if (trips.error) {
+    return res.status(500).json({ error: trips.error });
   }
+  res.json(trips);
 });
 
-// Get trip details by trip_id
-router.get("/:trip_id", async (req, res) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+// Rename trip title by trip_id
+router.patch("/:trip_id", async (req, res) => {
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
 
-  if (!token) return res.status(401).json({ error: "No token provided" });
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const tripId = req.params.trip_id;
+  const trip_id = req.params.trip_id;
+  const { title } = req.body;
 
-    // Fetch trip details from the database using tripId
-    const tripDetails = await getTripById(tripId);
-    if (tripDetails.error) {
-      return res.status(500).json({ error: tripDetails.error });
-    }
-
-    res.json(tripDetails);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (!title) {
+    return res.status(400).json({ error: "Title is required" });
   }
+
+  const renameResponse = await renameTrip(trip_id, title);
+  if (renameResponse.error) {
+    return res.status(500).json({ error: renameResponse.error });
+  }
+  res.json(renameResponse);
+});
+
+// Delete trip by trip_id
+router.delete("/:trip_id", async (req, res) => {
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
+
+  const tripId = req.params.trip_id;
+  const deleteResponse = await deleteTrip(tripId);
+  if (deleteResponse.error) {
+    return res.status(500).json({ error: deleteResponse.error });
+  }
+  res.json(deleteResponse);
 });
 
 // Get trip itinerary by trip_id
 router.get("/:trip_id/itinerary", async (req, res) => {
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
+
   const tripId = req.params.trip_id;
   const dayResponse = await getItineraryByTripId(tripId);
   if (dayResponse.error) {
     return res.status(500).json({ error: dayResponse.error });
   }
-
   res.json(dayResponse);
+});
+
+// Add a place to the itinerary
+router.post("/:trip_id/itinerary", async (req, res) => {
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
+
+  const { trip_id } = req.params;
+  const { day_number, place_name, destination } = req.body;
+
+  const placePromt = generatePlacePrompt(place_name, destination);
+  try {
+    const responseGeneratedPlace = await askGemini(placePromt);
+    const cleaned = responseGeneratedPlace.text
+      .replace(/```(?:json)?/g, "")
+      .trim();
+    const generatedPlace = JSON.parse(cleaned);
+
+    generatedPlace[0].id = await getPlaceID(place_name, destination);
+    generatedPlace[0].image = await getPlacePhoto(place_name);
+
+    const responseAddPlace = await addPlaceToItinerary(
+      trip_id,
+      day_number,
+      generatedPlace[0]
+    );
+    if (responseAddPlace.error) {
+      return res.status(500).json({ error: responseAddPlace.error });
+    }
+
+    res.json(responseAddPlace);
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: "Place generation failed", message: err.message });
+  }
+});
+
+// Update a place in the itinerary
+router.patch("/places/:place_id", async (req, res) => {
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
+
+  const { place_id } = req.params;
+  try {
+    const updatedPlace = await updatePlaceInItinerary(place_id, req.body);
+    if (updatedPlace.error) {
+      return res.status(500).json({ error: updatedPlace.error });
+    }
+    res.json(updatedPlace);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Detete a place from the itinerary
+router.delete("/places/:place_id", async (req, res) => {
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
+
+  const { place_id } = req.params;
+  try {
+    const deleteResponse = await deletePlaceFromItinerary(place_id);
+    if (deleteResponse.error) {
+      return res.status(500).json({ error: deleteResponse.error });
+    }
+    res.json({ message: "Place deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get details of a specific place in the itinerary
+router.get("/places/:place_id/details", async (req, res) => {
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
+
+  const { place_id } = req.params;
+  try {
+    // Check if extra details already exist in DB
+    const cachedDetails = await getPlaceExtraDetails(place_id);
+    if (
+      cachedDetails &&
+      !cachedDetails.error &&
+      cachedDetails.extra_details &&
+      Object.keys(cachedDetails.extra_details).length > 0
+    ) {
+      // Add image from your DB
+      const image = await getImageByPlaceId(place_id);
+      if (image.error) {
+        return res.status(500).json({ error: image.error });
+      }
+      cachedDetails.image = image;
+      console.log("Returning cached place details");
+      return res.json(cachedDetails.extra_details);
+    }
+
+    // Not in DB → fetch from Google API
+    const googlePlaceID = await getGooglePlaceID(place_id);
+    if (googlePlaceID.error) {
+      return res.status(500).json({ error: googlePlaceID.error });
+    }
+
+    const placeDetails = await getPlaceDetails(googlePlaceID);
+    if (placeDetails.error) {
+      return res.status(500).json({ error: placeDetails.error });
+    }
+
+    // Add image to placeDetails
+    const image = await getImageByPlaceId(place_id);
+    if (image.error) {
+      return res.status(500).json({ error: image.error });
+    }
+    placeDetails.image = image;
+
+    // Save new placeDetails to your DB for future use
+    const placeDetailsToSave = {
+      extra_details: placeDetails,
+    };
+    const saveResult = await updatePlaceInItinerary(
+      place_id,
+      placeDetailsToSave
+    );
+    if (saveResult.error) {
+      return res.status(500).json({ error: saveResult.error });
+    }
+
+    console.log("Returning new place details");
+    res.json(placeDetails);
+  } catch (error) {
+    console.error("Error in /places/:place_id/details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 export default router;

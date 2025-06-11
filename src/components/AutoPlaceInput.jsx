@@ -6,6 +6,9 @@ const AutoPlaceInput = ({
   setDestination,
   destinationError,
   setDestinationError,
+  noOfPredictions = 5,
+  includeLocality = true,
+  label = "Where are you going?",
 }) => {
   const [predictions, setPredictions] = useState([]);
   const [token, setToken] = useState(null);
@@ -44,23 +47,30 @@ const AutoPlaceInput = ({
       input: value,
       language: "en-US",
       sessionToken: token,
-      includedPrimaryTypes: ["locality"],
     };
+
+    if (includeLocality) {
+      request.includedPrimaryTypes = ["locality"];
+    } else {
+      request.includedPrimaryTypes = ["establishment"];
+    }
 
     const { suggestions } =
       await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
     if (requestIdRef.current === currentRequestId) {
-      setPredictions(suggestions);
+      setPredictions(suggestions.slice(0, noOfPredictions));
     }
   };
 
   const handlePredictionClick = async (placePrediction) => {
     const place = placePrediction.toPlace();
     await place.fetchFields({
-      fields: ["formattedAddress"],
+      fields: ["formattedAddress", "displayName"],
     });
-    setDestination(`${place.formattedAddress}`);
+    setDestination(
+      includeLocality ? `${place.formattedAddress}` : `${place.displayName}`
+    );
     setPredictions([]);
     setDestinationError(false);
     setActiveIndex(-1);
@@ -107,7 +117,7 @@ const AutoPlaceInput = ({
     <div className="relative w-full">
       <Input
         name="destination"
-        label="Where are you going?"
+        label={label}
         labelPlacement="outside"
         placeholder="Eg. New York, Paris, Tokyo"
         isClearable
@@ -126,7 +136,7 @@ const AutoPlaceInput = ({
       {predictions.length > 0 && (
         <Listbox
           aria-label="Autocomplete suggestions"
-          className="absolute z-10 w-full max-h-60 mt-overflow-y-auto bg-white border border-gray-300 rounded-xl shadow-lg"
+          className="absolute z-10 w-full max-h-60 mt-overflow-y-auto bg-white border border-gray-300 rounded-xl shadow-lg mt-0.5"
           items={predictions}
           ref={listboxRef}
           tabIndex={-1}

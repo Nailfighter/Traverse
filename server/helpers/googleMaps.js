@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 
-export async function getPlaceID(placeName) {
+export async function getPlaceID(placeName, destination) {
   const response = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
     {
@@ -10,7 +10,7 @@ export async function getPlaceID(placeName) {
         "X-Goog-Api-Key": process.env.VITE_GOOGLE_MAPS_API_KEY,
         "X-Goog-FieldMask": "places.id",
       },
-      body: JSON.stringify({ textQuery: placeName }),
+      body: JSON.stringify({ textQuery: `${placeName} ${destination}` }),
     }
   );
   const data = await response.json();
@@ -54,5 +54,29 @@ export async function getPlaceBanner(placeName) {
     return { image: img };
   } catch (err) {
     return { error: `Could not fetch banner for "${place}"` };
+  }
+}
+
+export async function getPlaceDetails(placeID) {
+  try {
+    const response = await fetch(
+      `https://places.googleapis.com/v1/places/${placeID}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": process.env.VITE_GOOGLE_MAPS_API_KEY,
+          "X-Goog-FieldMask":
+            "displayName.text,types,formattedAddress,googleMapsUri,googleMapsLinks.reviewsUri,regularOpeningHours.weekdayDescriptions,internationalPhoneNumber,rating,userRatingCount,websiteUri,postalAddress.locality,postalAddress.administrativeArea,types",
+        },
+      }
+    );
+
+    if (!response.ok) throw new Error("Place detail fetch failed");
+
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    return { error: `Could not fetch place details: ${err.message}` };
   }
 }

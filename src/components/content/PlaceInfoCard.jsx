@@ -120,12 +120,12 @@ const PlaceInfoCard = () => {
 
   return (
     extraInfo.visible && (
-      <Card className="absolute bottom-4 left-4 p-2 w-140 h-auto">
+      <Card className="absolute bottom-4 left-4 p-2 min-w-140 max-w-170 h-auto">
         <CardBody className="overflow-visible">
           <div className="flex flex-col gap-3">
             <div>
-              <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-semibold">
+              <div className="flex justify-between items-center gap-4">
+                <h1 className="text-[24px] font-semibold leading-[1.2] ">
                   {placeDetails.displayName.text}
                 </h1>
                 <div className="flex items-center gap-2">
@@ -136,12 +136,12 @@ const PlaceInfoCard = () => {
                   >
                     <Button
                       variant="bordered"
-                      className="flex items-center text-sm font-medium p-2.5 border border-bcolor rounded-full h-10"
+                      className="flex items-center text-sm font-medium p-2.5  border border-bcolor rounded-full h-10"
                     >
                       <img
                         src="/google-maps.png"
                         alt="Google Maps Icon"
-                        className="h-full aspect-square"
+                        className="h-full aspect-square ml-1"
                       />
                       Open in Maps
                     </Button>
@@ -157,7 +157,7 @@ const PlaceInfoCard = () => {
                   </Button>
                 </div>
               </div>
-              {isMinimised && (
+              {isMinimised && placeDetails.rating && (
                 <div className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600">
                   <StarIcon className="h-4 w-4 text-[#fbbc04]" />
                   {placeDetails.rating}
@@ -171,7 +171,10 @@ const PlaceInfoCard = () => {
                     {`${placeDetails.userRatingCount} Reviews`}
                   </a>
                   <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
-                  {`${placeDetails.postalAddress.locality}, ${placeDetails.postalAddress.administrativeArea}`}
+                  {`${placeDetails?.postalAddress?.locality}`}
+                  {placeDetails?.postalAddress?.administrativeArea
+                    ? `, ${placeDetails.postalAddress.administrativeArea}`
+                    : ""}
                 </div>
               )}
             </div>
@@ -212,7 +215,7 @@ const PlaceInfoCard = () => {
                     <GlobeAsiaAustraliaIcon className="h-4.5 aspect-square" />
                     <a
                       href={placeDetails.websiteUri}
-                      className="text-blue-600 hover:underline"
+                      className="text-blue-600 hover:underline overflow-hidden text-ellipsis whitespace-nowrap"
                       target="_blank"
                       rel="noopener noreferrer"
                     >

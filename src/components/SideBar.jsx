@@ -8,12 +8,11 @@ import { Button } from "@heroui/react";
 import TripForm from "./TripForm";
 import { AppContext } from "../App";
 import { supabase } from "../RouterPage";
-import { useNavigate } from "react-router-dom";
 
 const Base64Image = ({ name, base64 }) => {
   return (
     <img
-      className="h-full object-cover"
+      className="h-full object-cover rounded-lg"
       alt={name}
       src={base64 ? `data:image/jpeg;base64,${base64}` : undefined}
     />
@@ -37,18 +36,17 @@ const TripBox = ({
       <div
         className={
           isSelected
-            ? `border-3 border-[#2e2e2e] rounded-xl w-full h-full`
-            : "w-full h-full"
+            ? `border-3 border-[#2e2e2e] rounded-xl w-full h-full button-animation`
+            : "w-full h-full button-animation"
         }
       >
-        <Button
-          isIconOnly
+        <button
           variant="light"
-          className="w-full h-full border-3 border-white rounded-xl"
-          onPress={onClick}
+          className="w-full h-full border-3 border-white rounded-xl hover:cursor-pointer"
+          onClick={onClick}
         >
           <Base64Image name={trip.destination} base64={trip.banner} />
-        </Button>
+        </button>
       </div>
 
       {isHovered && (
@@ -60,47 +58,23 @@ const TripBox = ({
   );
 };
 
-async function handleLogout({ navigate }) {
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    console.error("Error logging out:", error.message);
-  } else {
-    console.log("Logged out successfully");
-  }
-  navigate("/login");
-}
-
 const SideBar = () => {
-  const navigate = useNavigate();
   const { allUserTrips, currentTrip, setCurrentTrip } = useContext(AppContext);
   const [hoveredTripId, setHoveredTripId] = useState(null);
 
   return (
-    <div className="w-20 h-screen border-r border-bcolor flex flex-col gap-5 p-[10px]">
+    <div className="w-18 h-screen border-r border-bcolor flex flex-col gap-5 p-[10px]">
       <Button isIconOnly variant="light">
         <PaperAirplaneIcon className="rotate-[335deg] w-5 h-5" />
       </Button>
       <TripForm />
-      <Button isIconOnly variant="light" className="w-full p-1.5">
+      {/* <Button isIconOnly variant="light" className="w-full p-1.5">
         <MagnifyingGlassIcon className="h-full" />
-      </Button>
-
-      <Button
-        isIconOnly
-        variant="light"
-        onPress={() => handleLogout({ navigate })}
-        className="w-full"
-      >
-        <img
-          src="/My PP.png"
-          alt="Profile"
-          className="aspect-square h-full rounded-full"
-        />
-      </Button>
+      </Button> */}
 
       <div className="border border-gray-300" />
 
-      <div className="grid grid-cols-1 gap-6 w-full">
+      <div className="grid grid-cols-1 gap-4 w-full">
         {allUserTrips.map((trip, key) => (
           <TripBox
             key={trip.trip_id}
@@ -111,7 +85,6 @@ const SideBar = () => {
             isSelected={currentTrip.tripHeader?.trip_id === trip.trip_id}
             onClick={() =>
               setCurrentTrip((prev) => ({
-                ...prev,
                 tripHeader: allUserTrips[key],
               }))
             }

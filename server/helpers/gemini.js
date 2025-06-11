@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-export const generatePrompt = (tripDetails) => {
+export const generateItineraryPrompt = (tripDetails) => {
   const budgetOptions = {
     Low: "500 - 1000 USD",
     Medium: "1000 - 2500 USD",
@@ -39,10 +39,23 @@ The final output needs to be a JSON object in this format:
 Guidelines:
 - "name": The exact name of a place or point of interest. It should not include any verb or action — strictly use the name of the point of interest.
 - The description should be like: "Cozy bookstore and cafe with local vibes and used books.
-- "start" and "end": Times in 12-hour format (e.g. "9:00 AM" - "11:30 AM").
+- "start" and "end": Times in 12-hour format (e.g. "9:00 AM" - "11:30 AM"). Make sure the times are not past 10:00 PM.
 - "image": Always set this to null.
 
 Ensure the result is valid JSON with no extra commentary or explanations.
+`;
+};
+
+export const generatePlacePrompt = (placeName, placeDestination) => {
+  return `I need information on ${placeName}, ${placeDestination} as part of itinerary.
+The final output needs to be a JSON object in this format:
+{ id, name, description, start, end, image }
+Guidelines:
+"name": ${placeName}
+The description should be like: "Cozy bookstore and cafe with local vibes and used books."
+"start" and "end": Times in 12-hour format (e.g. "9:00 AM" - "11:30 AM") and needs to be from 11:00 PM to 12:00 PM
+"image": Always set this to null.
+Ensure the result is valid JSON with no extra commentary or explanations
 `;
 };
 

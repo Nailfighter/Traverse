@@ -1,4 +1,4 @@
-import { use, useContext, useState } from "react";
+import { useEffect, useContext, useState } from "react";
 import { Button } from "@heroui/react";
 import { Tabs, Tab } from "@heroui/react";
 
@@ -24,6 +24,7 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 import PlaceCard from "./PlaceCard.jsx";
+import AddPlaceForm from "./AddPlaceForm.jsx";
 
 import { AppContext } from "../../App.jsx";
 
@@ -45,16 +46,18 @@ const TravelTime = ({ time, distance, mode }) => (
   </div>
 );
 
-const DayTabs = ({ fullItinerary, setPlaces }) => {
-  const [selected, setSelected] = useState("1");
-  const days = Object.keys(fullItinerary); // Dynamic days like ["1", "2", "3", ...]
+const DayTabs = ({ fullItinerary, setPlaces, selectedDay, setSelectedDay }) => {
+  const days = Object.keys(fullItinerary);
 
   return (
     <Tabs
-      selectedKey={selected}
+      selectedKey={selectedDay}
       onSelectionChange={(key) => {
-        setSelected(key);
-        setPlaces(fullItinerary[Number(key)]);
+        setSelectedDay(key);
+        const sortedPlaces = [...(fullItinerary[Number(key)] || [])].sort(
+          (a, b) => a.order_index - b.order_index
+        );
+        setPlaces(sortedPlaces);
       }}
       radius="full"
       variant="solid"
@@ -73,37 +76,55 @@ const DayTabs = ({ fullItinerary, setPlaces }) => {
 
 const Itinerary = () => {
   const { currentTrip } = useContext(AppContext);
-  const [places, setPlaces] = useState(currentTrip.itinerary[1] || []);
+  const [places, setPlaces] = useState([]);
+  const [selectedDay, setSelectedDay] = useState("1");
+
+  useEffect(() => {
+    if (currentTrip?.itinerary) {
+      const sortedPlaces = [...(currentTrip.itinerary[1] || [])].sort(
+        (a, b) => a.order_index - b.order_index
+      );
+      setPlaces(sortedPlaces);
+    }
+  }, [currentTrip]);
 
   const [timeInfo, showTimeInfo] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
-      const oldIndex = places.findIndex((place) => place.id === active.id);
-      const newIndex = places.findIndex((place) => place.id === over?.id);
-      setPlaces(arrayMove(places, oldIndex, newIndex));
+    if (!over) return;
+
+    if (active.id !== over.id) {
+      const oldIndex = places.findIndex(
+        (place) => place.place_id === active.place_id
+      );
+      const newIndex = places.findIndex(
+        (place) => place.place_id === over.place_id
+      );
+
+      const newPlaces = arrayMove(places, oldIndex, newIndex);
+
+      newPlaces.forEach((place, index) => {
+        place.order_index = index;
+      });
+
+      setPlaces(newPlaces);
     }
   };
 
-  function handleDeletePlace(placeId) {
-    setPlaces((prevPlaces) => prevPlaces.filter((p) => p.id !== placeId));
-  }
-
   return (
-    <div className="w-full max-w-full flex flex-col gap-4 pt-1">
+    <div className="w-full  flex flex-col gap-4 pt-1 ">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Itinerary</h1>
-        <Button
-          variant="bordered"
-          className="flex items-center text-sm font-medium p-3 border border-bcolor rounded-full "
-        >
-          <MapPinPlus className="h-5 w-5 mr-1" />
-          Add Place
-        </Button>
+        <AddPlaceForm dayNumber={selectedDay} />
       </div>
-      <DayTabs fullItinerary={currentTrip.itinerary} setPlaces={setPlaces} />
+      <DayTabs
+        fullItinerary={currentTrip?.itinerary || { 1: [] }}
+        setPlaces={setPlaces}
+        selectedDay={selectedDay}
+        setSelectedDay={setSelectedDay}
+      />
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -111,26 +132,28 @@ const Itinerary = () => {
         modifiers={[restrictToVerticalAxis]}
       >
         <SortableContext
-          items={places.map((p) => p.id)}
+          items={places.map((p) => p.place_id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="flex flex-col gap-4 h-[60vh] w-full max-w-full overflow-y-auto overflow-x-hidden p-4 box-border scrollbar-hide ">
+          <div className="flex flex-col flex-grow gap-4 h-full overflow-y-scroll overflow-hidden p-4  scrollbar-hide ">
             {places.map((place, index) => (
-              <div
-                className="flex flex-col gap-4 w-full max-w-full"
-                key={place.id}
-              >
+              <div className="flex flex-col gap-4 w-full " key={place.place_id}>
                 <PlaceCard
-                  place={place}
                   index={index}
+                  place={place}
+                  setPlaces={setPlaces}
                   showTimeInfo={showTimeInfo}
-                  handleDeletePlace={handleDeletePlace}
                 />
                 {index < places.length - 1 && timeInfo && (
                   <TravelTime time="1 hr 30 min" distance="34 mi" mode="car" />
                 )}
               </div>
             ))}
+            {places.length === 0 && (
+              <div className="text-center text-gray-500">
+                No places added for this day
+              </div>
+            )}
           </div>
         </SortableContext>
       </DndContext>

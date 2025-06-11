@@ -16,7 +16,6 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_KEY
 );
 
-
 const router = createBrowserRouter([
   {
     path: "/login",
@@ -45,7 +44,7 @@ async function requireAuth() {
   } = await supabase.auth.getSession();
 
   if (!session) {
-    throw redirect("/auth");
+    throw redirect("/login");
   }
 
   return session;
