@@ -5,6 +5,8 @@ dotenv.config();
 import tripsRoutes from "./routes/trips.js";
 import mapsRoutes from "./routes/maps.js";
 
+import { getPlaceGeoLocation } from "./helpers/googleMaps.js";
+
 const app = express();
 const PORT = process.env.SERVER_PORT || 3002;
 
@@ -13,10 +15,8 @@ app.use("/api/trips", tripsRoutes);
 app.use("/api/maps", mapsRoutes);
 
 // Test route in index
-app.post("/api/test", async (req, res) => {
-  res.status(200).json({
-    message: "Yes, the server is running!",
-  });
+app.get("/api/test", async (req, res) => {
+  
 });
 
 app.listen(PORT, () => {

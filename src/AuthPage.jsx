@@ -1,5 +1,16 @@
-import React, { useState, useEffect, use } from "react";
-import { Alert, Form, Input, Checkbox, Button } from "@heroui/react";
+import React, { useState, useEffect } from "react";
+import {
+  Alert,
+  Form,
+  Input,
+  Checkbox,
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "./RouterPage";
 import { useNavigate } from "react-router-dom";
@@ -42,9 +53,12 @@ async function handleEmailLogin({
   }
 }
 
-function handleGoogleSignIn({ email, password }) {
-  console.log("Google Sign In:", { email, password });
-  // Implement Google sign-in logic here
+async function handlePasswordReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+
+  return { error };
 }
 
 const handleGuestLogin = () => {
@@ -67,6 +81,14 @@ const AuthPage = () => {
   );
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [authErrorMessage, setAuthErrorMessage] = useState("");
+
+  // Forgot Password Modal States
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetEmailError, setResetEmailError] = useState("");
+  const [isResetLoading, setIsResetLoading] = useState(false);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState("");
+  const [resetErrorMessage, setResetErrorMessage] = useState("");
 
   const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -120,12 +142,6 @@ const AuthPage = () => {
 
     if (validateCredentials()) return;
 
-    const clickedButton = e.nativeEvent.submitter;
-    if (clickedButton && clickedButton.name === "googleSignIn") {
-      handleGoogleSignIn({ email, password });
-      return;
-    }
-
     await handleEmailLogin({
       email,
       password,
@@ -137,238 +153,432 @@ const AuthPage = () => {
     });
   };
 
-  return (
-    <div
-      className="bg-cover bg-center h-screen w-full p-20 flex items-center justify-center bg-gray-100"
-      style={{
-        backgroundImage: "url('/1273703.png')",
-      }}
-    >
-      <div className="w-full h-full rounded-4xl border-8 border-white overflow-hidden grid grid-cols-2">
-        <div className="relative flex flex-col justify-end h-full p-10 text-white rounded-r-4xl overflow-visible bg-gradient-to-t from-black/70 via-black/40 to-transparent">
-          <div className="z-10">
-            <h1 className="text-6xl font-extrabold tracking-tight">
-              Travel Smarter.
-            </h1>
-            <h2 className="text-2xl font-semibold text-gray-200 mt-2">
-              Let AI craft your next adventure.
-            </h2>
-          </div>
-        </div>
+  const handleForgotPasswordClick = (e) => {
+    e.preventDefault();
+    setIsForgotPasswordOpen(true);
+    setResetEmail(email); // Pre-fill with current email if available
+    setResetEmailError("");
+    setResetSuccessMessage("");
+    setResetErrorMessage("");
+  };
 
-        <div className="bg-white p-20 flex flex-col gap-8 justify-center">
-          <div className="text-center">
-            <h2 className="text-4xl font-bold">
-              {isSigningUp ? "Create Account" : "Welcome Back"}
-            </h2>
-            <p className="text-gray-500">
-              {isSigningUp
-                ? "Fill in your details to create an account"
-                : "Enter your email and password to access your trips"}
-            </p>
+  const validateResetEmail = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
+      setResetEmailError("Please enter a valid email address");
+      return false;
+    }
+    setResetEmailError("");
+    return true;
+  };
+
+  const handlePasswordResetSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateResetEmail()) return;
+
+    setIsResetLoading(true);
+    setResetErrorMessage("");
+
+    try {
+      const { error } = await handlePasswordReset(resetEmail);
+
+      if (error) {
+        setResetErrorMessage(error.message);
+      } else {
+        setResetSuccessMessage(
+          "Password reset email sent successfully! Check your inbox."
+        );
+        setTimeout(() => {
+          setIsForgotPasswordOpen(false);
+          setResetSuccessMessage("");
+        }, 3000);
+      }
+    } catch (err) {
+      setResetErrorMessage("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsForgotPasswordOpen(false);
+    setResetEmail("");
+    setResetEmailError("");
+    setResetSuccessMessage("");
+    setResetErrorMessage("");
+  };
+
+  return (
+    <>
+      <div
+        className="bg-cover bg-center h-screen w-full p-20 flex items-center justify-center bg-gray-100"
+        style={{
+          backgroundImage: "url('/1273703.png')",
+        }}
+      >
+        <div className="w-full h-full rounded-4xl border-8 border-white overflow-hidden grid grid-cols-2">
+          <div className="relative flex flex-col justify-end h-full p-10 text-white rounded-r-4xl overflow-visible bg-gradient-to-t from-black/70 via-black/40 to-transparent">
+            <CutOut className="absolute top-0 right-0 fill-white" />
+            <CutOut className="absolute bottom-0 right-0 rotate-90 fill-white" />
+            <div className="z-10">
+              <h1 className="text-6xl font-extrabold tracking-tight">
+                Travel Smarter.
+              </h1>
+              <h2 className="text-2xl font-semibold text-gray-200 mt-2">
+                Let AI craft your next adventure.
+              </h2>
+            </div>
           </div>
-          {authErrorMessage && (
-            <Alert
-              color="danger"
-              title={authErrorMessage}
-              className="max-h-16"
-            />
-          )}
-          <Form
-            className="w-full flex flex-col gap-8 items-center"
-            onSubmit={(e) => {
-              handleEmailSubmit(e);
-            }}
-          >
-            <motion.div
-              layout
-              className="w-full gap-4 flex flex-col"
-              transition={{ duration: 0.4, ease: "easeInOut" }}
+
+          <div className="bg-white p-20 flex flex-col gap-8 justify-center">
+            <div className="text-center">
+              <h2 className="text-4xl font-bold">
+                {isSigningUp ? "Create Account" : "Welcome Back"}
+              </h2>
+              <p className="text-gray-500">
+                {isSigningUp
+                  ? "Fill in your details to create an account"
+                  : "Enter your email and password to access your trips"}
+              </p>
+            </div>
+            <AnimatePresence>
+              {authErrorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <svg
+                          className="h-5 w-5 text-red-400"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-red-800">
+                          {authErrorMessage}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <Form
+              className="w-full flex flex-col gap-8 items-center"
+              onSubmit={(e) => {
+                handleEmailSubmit(e);
+              }}
             >
-              <div className="w-full">
-                <label className="block mb-1 font-medium" htmlFor="email">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  placeholder="Enter your email"
-                  className="w-full"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (emailError) setEmailError("");
-                  }}
-                  isInvalid={!!emailError}
-                  errorMessage={emailError}
-                />
+              <motion.div
+                layout
+                className="w-full gap-4 flex flex-col"
+                transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
+                style={{ minHeight: isSigningUp ? "280px" : "200px" }}
+              >
+                <div className="w-full">
+                  <label className="block mb-1 font-medium" htmlFor="email">
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    placeholder="Enter your email"
+                    className="w-full"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError("");
+                    }}
+                    isInvalid={!!emailError}
+                    errorMessage={emailError}
+                  />
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {isSigningUp && (
+                    <motion.div
+                      key="fullname"
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.4 }}
+                      className="w-full"
+                    >
+                      <label
+                        className="block mb-1 font-medium"
+                        htmlFor="fullname"
+                      >
+                        Full Name
+                      </label>
+                      <Input
+                        id="fullname"
+                        placeholder="Enter your full name"
+                        className="w-full"
+                        value={fullName}
+                        onChange={(e) => {
+                          setFullName(e.target.value);
+                          if (fullNameError) setFullNameError("");
+                        }}
+                        isInvalid={!!fullNameError}
+                        errorMessage={fullNameError}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="w-full">
+                  <label className="block mb-1 font-medium" htmlFor="password">
+                    Password
+                  </label>
+                  <Input
+                    id="password"
+                    placeholder="Enter your password"
+                    className="w-full"
+                    type={isVisible ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) setPasswordError("");
+                    }}
+                    isInvalid={!!passwordError}
+                    errorMessage={passwordError}
+                    endContent={
+                      <button
+                        aria-label="toggle password visibility"
+                        className="focus:outline-none"
+                        type="button"
+                        onClick={toggleVisibility}
+                      >
+                        {isVisible ? (
+                          <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                        ) : (
+                          <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                        )}
+                      </button>
+                    }
+                  />
+                </div>
+
+                <div className="w-full flex items-center justify-end text-sm font-medium">
+                  {!isSigningUp && (
+                    <a
+                      href="#"
+                      onClick={handleForgotPasswordClick}
+                      className="text-black hover:underline cursor-pointer"
+                    >
+                      Forgot Password?
+                    </a>
+                  )}
+                </div>
+              </motion.div>
+
+              <motion.div
+                layout
+                className="w-[70%] gap-4 flex flex-col"
+                transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
+              >
+                <Button
+                  name="emailSignIn"
+                  type="submit"
+                  variant="light"
+                  className="bg-black w-full font-semibold text-white hover:!bg-[#2e2e2e]"
+                >
+                  {isSigningUp ? "Sign Up" : "Sign In"}
+                </Button>
+
+                <p className="text-center text-sm text-gray-600">
+                  {isSigningUp ? (
+                    <>
+                      Already have an account?{" "}
+                      <motion.a
+                        href="#"
+                        className="text-black font-semibold hover:underline cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsSigningUp(false);
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        Sign In
+                      </motion.a>
+                    </>
+                  ) : (
+                    <>
+                      Don't have an account?{" "}
+                      <motion.a
+                        href="#"
+                        className="text-black font-semibold hover:underline cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsSigningUp(true);
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        Sign Up
+                      </motion.a>
+                    </>
+                  )}
+                </p>
+              </motion.div>
+
+              <div className="flex items-center w-full gap-4 ">
+                <hr className="flex-grow border-gray-300" />
+                <span className="text-sm text-gray-500">or</span>
+                <hr className="flex-grow border-gray-300" />
               </div>
 
-              <AnimatePresence initial={false}>
-                {isSigningUp && (
+              <div className="text-center w-[70%]">
+                <p className="text-sm text-gray-500 mb-2">
+                  Not sure yet? Try one trip for free without signing up.
+                </p>
+                <Button
+                  variant="flat"
+                  className="w-full text-sm font-medium bg-gray-100 text-black hover:bg-gray-200"
+                  onPress={handleGuestLogin}
+                >
+                  Try One Trip Free as Guest
+                </Button>
+              </div>
+            </Form>
+          </div>
+        </div>
+      </div>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        isOpen={isForgotPasswordOpen}
+        onClose={handleModalClose}
+        placement="center"
+        backdrop="blur"
+      >
+        <ModalContent>
+          <form onSubmit={handlePasswordResetSubmit}>
+            <ModalHeader className="flex flex-col gap-1">
+              <h2 className="text-2xl font-bold">Reset Password</h2>
+              <p className="text-sm text-gray-500 font-normal">
+                Enter your email address and we'll send you a link to reset your
+                password.
+              </p>
+            </ModalHeader>
+            <ModalBody>
+              <AnimatePresence>
+                {resetSuccessMessage && (
                   <motion.div
-                    key="fullname"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.4 }}
-                    className="w-full"
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    <label
-                      className="block mb-1 font-medium"
-                      htmlFor="fullname"
-                    >
-                      Full Name
-                    </label>
-                    <Input
-                      id="fullname"
-                      placeholder="Enter your full name"
-                      className="w-full"
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value);
-                        if (fullNameError) setFullNameError("");
-                      }}
-                      isInvalid={!!fullNameError}
-                      errorMessage={fullNameError}
-                    />
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="h-5 w-5 text-green-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-green-800">
+                            {resetSuccessMessage}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-
+              <AnimatePresence>
+                {resetErrorMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="h-5 w-5 text-red-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-red-800">
+                            {resetErrorMessage}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <div className="w-full">
-                <label className="block mb-1 font-medium" htmlFor="password">
-                  Password
+                <label className="block mb-2 font-medium" htmlFor="resetEmail">
+                  Email Address
                 </label>
                 <Input
-                  id="password"
-                  placeholder="Enter your password"
-                  className="w-full"
-                  type={isVisible ? "text" : "password"}
-                  value={password}
+                  id="resetEmail"
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={resetEmail}
                   onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (passwordError) setPasswordError("");
+                    setResetEmail(e.target.value);
+                    if (resetEmailError) setResetEmailError("");
                   }}
-                  isInvalid={!!passwordError}
-                  errorMessage={passwordError}
-                  endContent={
-                    <button
-                      aria-label="toggle password visibility"
-                      className="focus:outline-none"
-                      type="button"
-                      onClick={toggleVisibility}
-                    >
-                      {isVisible ? (
-                        <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                      ) : (
-                        <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                      )}
-                    </button>
-                  }
+                  isInvalid={!!resetEmailError}
+                  errorMessage={resetEmailError}
+                  autoFocus
                 />
               </div>
-
-              <div className="w-full flex items-center justify-between text-sm font-medium">
-                <div className="flex items-center gap-1 font-medium">
-                  <Checkbox
-                    defaultSelected={rememberMe}
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    color="default"
-                  />
-                  <span>Remember me</span>
-                </div>
-                {!isSigningUp && <a href="#forgotpassword">Forgot Password</a>}
-              </div>
-            </motion.div>
-
-            <motion.div
-              layout
-              className="w-[70%] gap-4 flex flex-col"
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-            >
+            </ModalBody>
+            <ModalFooter>
               <Button
-                name="emailSignIn"
-                type="submit"
+                color="default"
                 variant="light"
-                className="bg-black w-full font-semibold text-white hover:!bg-[#2e2e2e]"
+                onPress={handleModalClose}
+                disabled={isResetLoading}
               >
-                {isSigningUp ? "Sign Up" : "Sign In"}
+                Cancel
               </Button>
-
-              {/* {!isSigningUp && (
-                <Button
-                  name="googleSignIn"
-                  type="submit"
-                  variant="bordered"
-                  className="flex items-center text-sm font-medium p-3 border border-bcolor"
-                >
-                  <img
-                    src="https://www.svgrepo.com/show/475656/google-color.svg"
-                    alt="Google"
-                    className="w-5 h-5"
-                  />
-                  Sign In with Google
-                </Button>
-              )} */}
-
-              <p className="text-center text-sm text-gray-600">
-                {isSigningUp ? (
-                  <>
-                    Already have an account?{" "}
-                    <motion.a
-                      href="#"
-                      className="text-black font-semibold hover:underline cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setIsSigningUp(false);
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      Sign In
-                    </motion.a>
-                  </>
-                ) : (
-                  <>
-                    Don’t have an account?{" "}
-                    <motion.a
-                      href="#"
-                      className="text-black font-semibold hover:underline cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setIsSigningUp(true);
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      Sign Up
-                    </motion.a>
-                  </>
-                )}
-              </p>
-            </motion.div>
-
-            <div className="flex items-center w-full gap-4 ">
-              <hr className="flex-grow border-gray-300" />
-              <span className="text-sm text-gray-500">or</span>
-              <hr className="flex-grow border-gray-300" />
-            </div>
-
-            <div className="text-center w-[70%]">
-              <p className="text-sm text-gray-500 mb-2">
-                Not sure yet? Try one trip for free without signing up.
-              </p>
               <Button
-                variant="flat"
-                className="w-full text-sm font-medium bg-gray-100 text-black hover:bg-gray-200"
-                onPress={handleGuestLogin}
+                color="primary"
+                type="submit"
+                isLoading={isResetLoading}
+                className="bg-black text-white hover:bg-gray-800"
               >
-                Try One Trip Free as Guest
+                {isResetLoading ? "Sending..." : "Send Reset Link"}
               </Button>
-            </div>
-          </Form>
-        </div>
-      </div>
-    </div>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+    </>
   );
 };
 

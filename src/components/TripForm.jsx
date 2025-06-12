@@ -32,6 +32,7 @@ const getItinerary = async (tripDetails, accessToken) => {
     });
 
     const data = await response.json();
+    console.log("Itinerary response:", data);
     return data;
   } catch (error) {
     console.error("Failed to fetch itinerary:", error);
@@ -68,7 +69,7 @@ export default function TripForm() {
     setDestinationError(false);
 
     const tripDetails = {
-      title: `${noOfDays} Days in ${destination}`,
+      title: `Trip to ${destination}`,
       destination,
       start_date: startDate.toString(),
       end_date: startDate.add({ days: noOfDays }).toString(),
@@ -103,13 +104,13 @@ export default function TripForm() {
       if (emptyTrips) {
         onOpen();
       }
-    }, 500);
+    }, 800);
 
     return () => clearTimeout(timeout);
   }, [emptyTrips]);
 
   return (
-    <div className="p-2">
+    <div className="px-2 mt-6 mb-1">
       <button
         variant="light"
         onClick={onOpen}

@@ -80,3 +80,23 @@ export async function getPlaceDetails(placeID) {
     return { error: `Could not fetch place details: ${err.message}` };
   }
 }
+
+export async function getPlaceGeoLocation(placeID) {
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeID}&key=${process.env.VITE_GOOGLE_MAPS_API_KEY}`
+    );
+    if (!response.ok) throw new Error("Place geolocation fetch failed");
+    const data = await response.json();
+
+    const results = data.results?.[0].geometry.location;
+
+    if (!results) throw new Error("No geolocation data found");
+    return {
+      lat: results.lat,
+      lng: results.lng,
+    };
+  } catch (err) {
+    return { error: `Could not fetch place geolocation: ${err.message}` };
+  }
+}

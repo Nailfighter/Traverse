@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { HeroUIProvider } from "@heroui/react";
 import "./App.css";
 
@@ -8,6 +8,7 @@ import Layout from "./components/content/Layout.jsx";
 import { supabase } from "./RouterPage.jsx";
 
 import { APIProvider } from "@vis.gl/react-google-maps";
+import { fetchRouteInfo } from "./components/map/Routes.jsx";
 
 export const AppContext = React.createContext();
 
@@ -37,6 +38,10 @@ export default function App() {
     itinerary: null,
   });
   const [emptyTrips, setEmptyTrips] = useState(true);
+
+  const [selectedDay, setSelectedDay] = useState("1");
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [routes, setRoutes] = useState([]);
 
   const fetchAllTrips = async (token) => {
     try {
@@ -95,6 +100,35 @@ export default function App() {
     fetchItinerary();
   }, [currentTrip.tripHeader]);
 
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      if (currentTrip.itinerary && selectedDay) {
+        const places = currentTrip.itinerary[selectedDay] || [];
+        const newRoutes = [];
+
+        for (let i = 0; i < places.length - 1; i++) {
+          const origin = places[i].location;
+          const destination = places[i + 1].location;
+
+          const routeInfo = await fetchRouteInfo(origin, destination);
+          if (routeInfo) {
+            newRoutes.push({
+              origin,
+              destination,
+              distance: routeInfo.distance,
+              duration: routeInfo.duration,
+              polyline: routeInfo.polyline,
+            });
+          }
+        }
+
+        setRoutes(newRoutes);
+      }
+    };
+
+    fetchRoutes();
+  }, [currentTrip.itinerary, selectedDay]);
+
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
       <HeroUIProvider>
@@ -106,6 +140,12 @@ export default function App() {
             accessToken,
             fetchData,
             emptyTrips,
+            selectedDay,
+            setSelectedDay,
+            selectedPlace,
+            setSelectedPlace,
+            routes,
+            setRoutes,
           }}
         >
           <div className="flex flex-row w-screen h-screen max-h-screen overflow-hidden">

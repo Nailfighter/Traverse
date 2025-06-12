@@ -52,9 +52,9 @@ The final output needs to be a JSON object in this format:
 { id, name, description, start, end, image }
 Guidelines:
 "name": ${placeName}
-The description should be like: "Cozy bookstore and cafe with local vibes and used books."
-"start" and "end": Times in 12-hour format (e.g. "9:00 AM" - "11:30 AM") and needs to be from 11:00 PM to 12:00 PM
-"image": Always set this to null.
+- The description should be like: "Cozy bookstore and cafe with local vibes and used books.
+- "start" and "end": Times in 12-hour format (e.g. "9:00 AM" - "11:30 AM") and needs to be from 11:00 PM to 12:00 PM
+- "image": Always set this to null.
 Ensure the result is valid JSON with no extra commentary or explanations
 `;
 };

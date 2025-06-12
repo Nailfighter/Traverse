@@ -12,7 +12,7 @@ import { supabase } from "../RouterPage";
 const Base64Image = ({ name, base64 }) => {
   return (
     <img
-      className="h-full object-cover rounded-lg"
+      className="h-full w-full object-cover rounded-lg"
       alt={name}
       src={base64 ? `data:image/jpeg;base64,${base64}` : undefined}
     />
@@ -59,20 +59,18 @@ const TripBox = ({
 };
 
 const SideBar = () => {
-  const { allUserTrips, currentTrip, setCurrentTrip } = useContext(AppContext);
+  const { allUserTrips, currentTrip, setCurrentTrip, setSelectedDay } =
+    useContext(AppContext);
   const [hoveredTripId, setHoveredTripId] = useState(null);
 
   return (
-    <div className="w-18 h-screen border-r border-bcolor flex flex-col gap-5 p-[10px]">
-      <Button isIconOnly variant="light">
-        <PaperAirplaneIcon className="rotate-[335deg] w-5 h-5" />
-      </Button>
+    <div className="w-18 h-screen border-r border-bcolor flex flex-col gap-1 p-[10px]">
+      <div className="flex items-center justify-center">
+        <PaperAirplaneIcon className="transform translate-x-0.5 rotate-[335deg] h-8 w-8" />
+      </div>
       <TripForm />
-      {/* <Button isIconOnly variant="light" className="w-full p-1.5">
-        <MagnifyingGlassIcon className="h-full" />
-      </Button> */}
 
-      <div className="border border-gray-300" />
+      <div className="border border-gray-300 mb-5" />
 
       <div className="grid grid-cols-1 gap-4 w-full">
         {allUserTrips.map((trip, key) => (
@@ -83,11 +81,13 @@ const SideBar = () => {
             onLeave={() => setHoveredTripId(null)}
             isHovered={hoveredTripId === trip.trip_id}
             isSelected={currentTrip.tripHeader?.trip_id === trip.trip_id}
-            onClick={() =>
+            onClick={() => {
+              if (currentTrip.tripHeader?.trip_id === trip.trip_id) return;
               setCurrentTrip((prev) => ({
                 tripHeader: allUserTrips[key],
-              }))
-            }
+              }));
+              setSelectedDay("1");
+            }}
           />
         ))}
       </div>

@@ -49,6 +49,7 @@ export default function AddPlaceForm({ dayNumber }) {
       }
 
       fetchData();
+      setDestination("");
       onClose();
     } catch (error) {
       console.error("Error adding place:", error);

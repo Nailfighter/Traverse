@@ -64,23 +64,27 @@ const AutoPlaceInput = ({
   };
 
   const handlePredictionClick = async (placePrediction) => {
-    const place = placePrediction.toPlace();
-    await place.fetchFields({
-      fields: ["formattedAddress", "displayName"],
-    });
-    setDestination(
-      includeLocality ? `${place.formattedAddress}` : `${place.displayName}`
-    );
-    setPredictions([]);
-    setDestinationError(false);
-    setActiveIndex(-1);
+    try {
+      const place = placePrediction.toPlace();
+      await place.fetchFields({
+        fields: ["formattedAddress", "displayName"],
+      });
+      setDestination(
+        includeLocality ? `${place.formattedAddress}` : `${place.displayName}`
+      );
+      setPredictions([]);
+      setDestinationError(false);
+      setActiveIndex(-1);
 
-    const { AutocompleteSessionToken } = await google.maps.importLibrary(
-      "places"
-    );
-    setToken(new AutocompleteSessionToken());
+      const { AutocompleteSessionToken } = await google.maps.importLibrary(
+        "places"
+      );
+      setToken(new AutocompleteSessionToken());
 
-    inputRef.current?.focus();
+      inputRef.current?.focus();
+    } catch (error) {
+      console.error("Error handling prediction click:", error);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -88,14 +92,23 @@ const AutoPlaceInput = ({
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIndex((prev) => (prev + 1) % predictions.length);
+      const newIndex = activeIndex + 1;
+      setActiveIndex(newIndex >= predictions.length ? 0 : newIndex);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActiveIndex((prev) => (prev <= 0 ? predictions.length - 1 : prev - 1));
+      const newIndex = activeIndex - 1;
+      setActiveIndex(newIndex < 0 ? predictions.length - 1 : newIndex);
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (activeIndex >= 0) {
-        handlePredictionClick(predictions[activeIndex].placePrediction);
+      if (activeIndex >= 0 && activeIndex < predictions.length) {
+        const selectedSuggestion = predictions[activeIndex];
+        if (selectedSuggestion && selectedSuggestion.placePrediction) {
+          console.log(
+            "Selected suggestion:",
+            selectedSuggestion.placePrediction.text
+          );
+          handlePredictionClick(selectedSuggestion.placePrediction);
+        }
       }
     } else if (e.key === "Escape") {
       e.preventDefault();
@@ -112,6 +125,11 @@ const AutoPlaceInput = ({
       }
     }
   }, [activeIndex]);
+
+  // Reset activeIndex when predictions change
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [predictions]);
 
   return (
     <div className="relative w-full">

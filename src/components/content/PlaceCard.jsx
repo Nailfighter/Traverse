@@ -10,7 +10,7 @@ import { Image, Button } from "@heroui/react";
 import TimeSetter from "./TimeSetter.jsx";
 
 import { AppContext } from "../../App.jsx";
-import { ExtraInfoContext } from "./Layout.jsx";
+import { handleDetailClick, ExtraInfoContext } from "./Layout.jsx";
 
 const Base64Image = ({ name, base64 }) => {
   return (
@@ -23,38 +23,11 @@ const Base64Image = ({ name, base64 }) => {
 };
 
 const VisitTime = ({ place, start, end }) => {
-  const { accessToken } = useContext(AppContext);
+  const { accessToken, setSelectedPlace } = useContext(AppContext);
   const { setExtraInfo } = useContext(ExtraInfoContext);
   const [startTime, setStartTime] = useState(start);
   const [endTime, setEndTime] = useState(end);
   const hasUserChangedRef = useRef(false);
-
-  const handleDetailClick = async () => {
-    try {
-      const responsePlaceDetails = await fetch(
-        `/api/trips/places/${place.place_id}/details`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (!responsePlaceDetails.ok) {
-        console.error("Failed to fetch place details");
-        return;
-      }
-
-      const data = await responsePlaceDetails.json();
-      setExtraInfo({
-        visible: true,
-        placeDetails: data,
-      });
-    } catch (error) {
-      console.error("Error fetching place details:", error);
-    }
-  };
 
   function handleUpdateTime() {
     fetch(`/api/trips/places/${place.place_id}`, {
@@ -99,7 +72,9 @@ const VisitTime = ({ place, start, end }) => {
           e.stopPropagation();
           e.preventDefault();
         }}
-        onPress={handleDetailClick}
+        onPress={() =>
+          handleDetailClick(accessToken, place, setSelectedPlace, setExtraInfo)
+        }
       >
         Details
       </Button>
@@ -142,6 +117,7 @@ const PlaceCard = ({ index, place, setPlaces, showTimeInfo }) => {
     } catch (error) {
       console.error("Error deleting place:", error);
     }
+    await fetchData();
   };
 
   return (

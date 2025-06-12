@@ -104,6 +104,8 @@ export async function createItinerary(tripId, generatedItinerary) {
         start_time: place.start,
         end_time: place.end,
         image: place.image,
+        lat: place.location.lat,
+        lng: place.location.lng,
       });
 
       if (placeError) {
@@ -165,6 +167,10 @@ export async function getItineraryByTripId(tripId) {
       start: place.start_time,
       end: place.end_time,
       image: place.image,
+      location: {
+        lat: place.lat,
+        lng: place.lng,
+      },
     }));
   });
 
@@ -215,6 +221,8 @@ export async function addPlaceToItinerary(tripId, day_number, placeDetails) {
       start_time: placeDetails.start,
       end_time: placeDetails.end,
       image: placeDetails.image || null,
+      lat: placeDetails.location.lat,
+      lng: placeDetails.location.lng,
     })
     .select("place_id")
     .single();

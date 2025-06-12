@@ -10,6 +10,7 @@ import {
   getPlaceID,
   getPlacePhoto,
   getPlaceDetails,
+  getPlaceGeoLocation,
 } from "../helpers/googleMaps.js";
 import {
   createTrip,
@@ -65,12 +66,17 @@ router.post("/generate", async (req, res) => {
       Object.keys(generatedItinerary).map((day) =>
         Promise.all(
           generatedItinerary[day].map(async (place) => {
+            if (!place.name) {
+              console.warn(`Skipping place with no name in day ${day}`);
+              return;
+            }
             try {
               place.id = await getPlaceID(place.name, destination);
               place.image = await getPlacePhoto(place.name);
+              place.location = await getPlaceGeoLocation(place.id);
             } catch (err) {
               console.warn(`Failed for ${place.name}: ${err.message}`);
-              place.image = null;
+              
             }
           })
         )
@@ -166,6 +172,9 @@ router.post("/:trip_id/itinerary", async (req, res) => {
 
     generatedPlace[0].id = await getPlaceID(place_name, destination);
     generatedPlace[0].image = await getPlacePhoto(place_name);
+    generatedPlace[0].location = await getPlaceGeoLocation(
+      generatedPlace[0].id
+    );
 
     const responseAddPlace = await addPlaceToItinerary(
       trip_id,

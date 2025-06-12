@@ -3,13 +3,6 @@ import { Button } from "@heroui/react";
 import { Tabs, Tab } from "@heroui/react";
 
 import {
-  CarFront,
-  Bike,
-  TramFront,
-  Footprints,
-  MapPinPlus,
-} from "lucide-react";
-import {
   DndContext,
   closestCenter,
   PointerSensor,
@@ -27,24 +20,7 @@ import PlaceCard from "./PlaceCard.jsx";
 import AddPlaceForm from "./AddPlaceForm.jsx";
 
 import { AppContext } from "../../App.jsx";
-
-const TravelTime = ({ time, distance, mode }) => (
-  <div className="flex text-[11px] items-center text-subcolor gap-1.5 font-medium w-full">
-    <div className="mt-1 grow h-px bg-[radial-gradient(circle,_gray_1px,_transparent_1px)] bg-[length:4px_1px]" />
-    {mode === "walk" && (
-      <Footprints className="h-5 w-5 text-subcolor shrink-0" />
-    )}
-    {mode === "bike" && <Bike className="h-5 w-5 text-subcolor shrink-0" />}
-    {mode === "transit" && (
-      <TramFront className="h-5 w-5 text-subcolor shrink-0" />
-    )}
-    {mode === "car" && <CarFront className="h-5 w-5 text-subcolor shrink-0" />}
-    {time}
-    <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
-    {distance}
-    <div className="mt-1 grow h-px bg-[radial-gradient(circle,_gray_1px,_transparent_1px)] bg-[length:4px_1px]" />
-  </div>
-);
+import TravelTime from "../map/TravelTime.jsx";
 
 const DayTabs = ({ fullItinerary, setPlaces, selectedDay, setSelectedDay }) => {
   const days = Object.keys(fullItinerary);
@@ -75,9 +51,9 @@ const DayTabs = ({ fullItinerary, setPlaces, selectedDay, setSelectedDay }) => {
 };
 
 const Itinerary = () => {
-  const { currentTrip } = useContext(AppContext);
+  const { currentTrip, selectedDay, setSelectedDay, routes } =
+    useContext(AppContext);
   const [places, setPlaces] = useState([]);
-  const [selectedDay, setSelectedDay] = useState("1");
 
   useEffect(() => {
     if (currentTrip?.itinerary) {
@@ -145,7 +121,11 @@ const Itinerary = () => {
                   showTimeInfo={showTimeInfo}
                 />
                 {index < places.length - 1 && timeInfo && (
-                  <TravelTime time="1 hr 30 min" distance="34 mi" mode="car" />
+                  <TravelTime
+                    duration={routes[index]?.duration.text || "N/A"}
+                    distance={routes[index]?.distance.text || "N/A"}
+                    mode="car"
+                  />
                 )}
               </div>
             ))}

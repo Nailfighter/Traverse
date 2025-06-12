@@ -16,7 +16,7 @@ import {
   Button,
   Form,
 } from "@heroui/react";
-
+import { supabase } from "../RouterPage.jsx";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { AppContext } from "../App.jsx";
 
@@ -26,6 +26,7 @@ const Header = () => {
     useContext(AppContext);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
+  const [ppLetters, setPPLetters] = useState("");
   const {
     isOpen: isRenameOpen,
     onOpen: onRenameOpen,
@@ -89,6 +90,25 @@ const Header = () => {
     }
   }, [currentTrip]);
 
+  useEffect(() => {
+    const fetchSession = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      const fullName = session?.user?.user_metadata?.fullName;
+      if (fullName) {
+        const initials = fullName
+          .split(" ")
+          .map((name) => name.charAt(0).toUpperCase())
+          .join("");
+        setPPLetters(initials);
+      }
+    };
+    fetchSession();
+  }, []);
+
   return (
     <div className="flex flex-grow-0 justify-between h-14 p-[6px] w-auto border-b-1 border-bcolor text-[12px] font-semibold">
       <Dropdown>
@@ -124,16 +144,30 @@ const Header = () => {
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
-      <button
-        onClick={() => handleLogout({ navigate })}
-        className="p-1 hover:cursor-pointer button-animation"
-      >
-        <img
-          src="/My PP.png"
-          alt="Profile"
-          className="aspect-square h-full rounded-full"
-        />
-      </button>
+      <Dropdown>
+        <DropdownTrigger>
+          <DropdownTrigger>
+            <button className="p-1 hover:cursor-pointer button-animation">
+              <div className="rounded-full bg-[#2e2e2e] w-9 aspect-square ">
+                <span className="text-white text-[14px] font-semibold flex items-center justify-center h-full">
+                  {ppLetters}
+                </span>
+              </div>
+            </button>
+          </DropdownTrigger>
+        </DropdownTrigger>
+        <DropdownMenu aria-label="Static Actions">
+          <DropdownItem
+            key="logout"
+            onPress={() => {
+              handleLogout({ navigate });
+            }}
+          >
+            Logout
+          </DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
+
       <Modal
         backdrop={"blur"}
         isOpen={isRenameOpen}
