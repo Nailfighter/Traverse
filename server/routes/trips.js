@@ -76,7 +76,6 @@ router.post("/generate", async (req, res) => {
               place.location = await getPlaceGeoLocation(place.id);
             } catch (err) {
               console.warn(`Failed for ${place.name}: ${err.message}`);
-              
             }
           })
         )
@@ -190,6 +189,49 @@ router.post("/:trip_id/itinerary", async (req, res) => {
     return res
       .status(500)
       .json({ error: "Place generation failed", message: err.message });
+  }
+});
+
+// Update the order of places in the itinerary
+router.patch("/places/order", async (req, res) => {
+  const decoded = await verifyToken(req, res);
+  if (!decoded) return;
+
+  const { places } = req.body;
+  if (!places || !Array.isArray(places) || places.length === 0) {
+    return res.status(400).json({ error: "Invalid places data" });
+  }
+
+  try {
+    const updatedPlaces = await Promise.all(
+      places.map((place) => {
+        if (
+          !place.place_id ||
+          place.order_index === undefined ||
+          place.order_index === null
+        ) {
+          throw new Error("Each place must have place_id and order_index");
+        }
+        return updatePlaceInItinerary(place.place_id, {
+          order_index: place.order_index,
+          start_time: place.start_time,
+          end_time: place.end_time,
+        });
+      })
+    );
+
+    if (updatedPlaces.some((p) => p.error)) {
+      return res.status(500).json({
+        error: updatedPlaces.find((p) => p.error).error,
+      });
+    }
+
+    res.json({ message: "Places order updated successfully" });
+  } catch (err) {
+    console.error("Error updating places order:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to update places order", message: err.message });
   }
 });
 

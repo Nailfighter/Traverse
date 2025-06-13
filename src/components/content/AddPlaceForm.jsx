@@ -8,24 +8,65 @@ import {
   useDisclosure,
   Button,
   Form,
+  addToast,
 } from "@heroui/react";
 import { MapPinPlus } from "lucide-react";
+import { motion } from "framer-motion";
 
 import AutoPlaceInput from "../AutoPlaceInput";
 import { AppContext } from "../../App";
 
+// Minimalistic Loader Component
+const Loader = () => {
+  return (
+    <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
+      <div className="flex gap-2">
+        {[0, 1, 2].map((index) => (
+          <motion.div
+            key={index}
+            className="w-3 h-3 bg-black rounded-full"
+            animate={{
+              y: [-8, 8, -8],
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: index * 0.2,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function AddPlaceForm({ dayNumber }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [destination, setDestination] = useState("");
-  const { accessToken, currentTrip, fetchData } = useContext(AppContext);
+  const [isEnabled, setIsEnabled] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const { accessToken, currentTrip, fetchData, isAnnonymous } =
+    useContext(AppContext);
 
   const [destinationError, setDestinationError] = useState(false);
 
+  useEffect(() => {
+    setIsEnabled(!isAnnonymous);
+  }, [isAnnonymous]);
+
   const handleAddingPlace = async () => {
-    if (!destination) {
-      setDestinationError(true);
+    if (!isEnabled) {
+      addToast({
+        title: "Sign In Required",
+        description:
+          "Adding places is currently disabled. Please sign in to enable this feature.",
+        color: "warning",
+      });
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const response = await fetch(
@@ -51,17 +92,46 @@ export default function AddPlaceForm({ dayNumber }) {
       fetchData();
       setDestination("");
       onClose();
+      addToast({
+        title: "Success",
+        description: "Place added to the itinerary",
+        color: "success",
+      });
     } catch (error) {
       console.error("Error adding place:", error);
+      addToast({
+        title: "Error",
+        description: "Failed to add place. Please try again.",
+        color: "danger",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleButtonPress = () => {
+    if (!isEnabled) {
+      addToast({
+        title: "Sign In Required",
+        description: "Adding places is currently disabled. Please sign in to enable this feature.",
+        color: "warning",
+      });
+      return;
+    }
+    onOpen();
   };
 
   return (
     <div>
       <Button
         variant="bordered"
-        className="flex items-center text-sm font-medium p-3 border border-bcolor rounded-full "
-        onPress={onOpen}
+        className={`flex items-center text-sm font-medium p-3 border border-bcolor rounded-full ${
+          !isEnabled || isLoading
+            ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
+            : ""
+        }`}
+        onPress={handleButtonPress}
+        isDisabled={isLoading}
       >
         <MapPinPlus className="h-5 w-5 mr-1" />
         Add Place
@@ -73,6 +143,7 @@ export default function AddPlaceForm({ dayNumber }) {
         onClose={onClose}
         isKeyboardDismissDisabled={true}
         size="md"
+        isDismissable={!isLoading}
       >
         <ModalContent>
           {(onClose) => (
@@ -87,7 +158,7 @@ export default function AddPlaceForm({ dayNumber }) {
                   validationBehavior="aria"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    handleTripCreation();
+                    handleAddingPlace();
                   }}
                 >
                   <AutoPlaceInput
@@ -98,12 +169,18 @@ export default function AddPlaceForm({ dayNumber }) {
                     noOfPredictions={2}
                     includeLocality={false}
                     label="Enter a place"
+                    disabled={isLoading}
                   />
                 </Form>
               </ModalBody>
 
               <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={onClose}
+                  isDisabled={isLoading}
+                >
                   Cancel
                 </Button>
                 <Button
@@ -111,8 +188,10 @@ export default function AddPlaceForm({ dayNumber }) {
                   variant="light"
                   className="bg-black px-3 h-auto text-[12px] font-semibold text-white hover:!bg-[#2e2e2e] ml-4"
                   onPress={handleAddingPlace}
+                  isDisabled={!isEnabled || isLoading}
+                  isLoading={isLoading}
                 >
-                  Add Place
+                  {isLoading ? "Adding Place..." : "Add Place"}
                 </Button>
               </ModalFooter>
             </div>
@@ -122,84 +201,3 @@ export default function AddPlaceForm({ dayNumber }) {
     </div>
   );
 }
-
-const NumberInput = ({ setNumber, number, max, unit }) => {
-  const increment = () => setNumber((c) => Math.min(max, c + 1));
-  const decrement = () => setNumber((c) => Math.max(1, c - 1));
-
-  return (
-    <div className="min-w-39 flex justify-between items-center gap-2 rounded-xl p-1 py-1 w-fit text-sm font-medium text-[#81818a] bg-gray-100 hover:bg-gray-200">
-      <Button
-        isIconOnly
-        variant="light"
-        size="sm"
-        onPress={decrement}
-        className="text-xl text-[#a1a1aa]"
-        radius="full"
-      >
-        −
-      </Button>
-      <span className="min-w-[24px] text-center">
-        {number}{" "}
-        {unit === "people"
-          ? number === 1
-            ? "person"
-            : "people"
-          : unit === "days"
-          ? number === 1
-            ? "day"
-            : "days"
-          : unit}
-      </span>
-      <Button
-        isIconOnly
-        variant="light"
-        size="sm"
-        onPress={increment}
-        className="text-xl text-[#a1a1aa]"
-        radius="full"
-      >
-        +
-      </Button>
-    </div>
-  );
-};
-
-const BudgetInput = ({ budget, setBudget }) => {
-  const budgetOptions = {
-    Low: "500 - 1000 USD",
-    Medium: "1000 - 2500 USD",
-    High: "2500+ USD",
-  };
-
-  return (
-    <div className="w-full grid grid-cols-3 gap-4">
-      {Object.keys(budgetOptions).map((option, index) => (
-        <div
-          key={option}
-          className={`w-full flex flex-col gap-1 border-2 rounded-lg p-2 cursor-pointer ${
-            budget === option
-              ? "bg-gray-200 border-gray-200"
-              : "border-gray-200 hover:bg-gray-200"
-          }`}
-          onClick={() => setBudget(option)}
-        >
-          <div className="flex items-center justify-center">
-            {Array.from({ length: index + 1 }).map((_, i) => (
-              <CurrencyDollarIcon
-                key={i}
-                className="w-[28px] aspect-square text-[#282f32]"
-              />
-            ))}
-          </div>
-          <span className="block text-xs font-semibold text-[#282f32]">
-            {option}
-          </span>
-          <span className="text-xs font-medium text-[#81818a]">
-            {budgetOptions[option]}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};

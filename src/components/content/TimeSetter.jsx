@@ -26,7 +26,7 @@ function convertTo24Hour(time12) {
     .padStart(2, "0")}:00`;
 }
 
-const TimeSetter = ({ time, setTime }) => {
+const TimeSetter = ({ time, setTime, isError = false }) => {
   const timeSlots = useMemo(() => {
     const slots = [];
     for (let h = 0; h < 24; h++) {
@@ -41,10 +41,17 @@ const TimeSetter = ({ time, setTime }) => {
   }, []);
 
   const formattedTime = convertTo12Hour(time);
+
   return (
     <Dropdown className="min-w-25">
       <DropdownTrigger className="mt-0.5">
-        <span className="text-[14px] text-subcolor hover:text-black font-medium">
+        <span
+          className={`text-[14px] font-medium ${
+            isError
+              ? "text-red-500 hover:text-red-600"
+              : "text-subcolor hover:text-black"
+          }`}
+        >
           {formattedTime}
         </span>
       </DropdownTrigger>

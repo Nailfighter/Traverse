@@ -30,10 +30,9 @@ export const fetchRouteInfo = async (origin, destination) => {
   const routeInfo = data?.routes?.[0];
 
   if (!routeInfo) return null;
-
   return {
-    distance: routeInfo.localizedValues?.distance || "N/A",
-    duration: routeInfo.localizedValues?.duration || "N/A",
+    distance: routeInfo.distanceMeters || "N/A",
+    duration: routeInfo.duration || "N/A",
     polyline: routeInfo.polyline?.encodedPolyline || null,
   };
 };

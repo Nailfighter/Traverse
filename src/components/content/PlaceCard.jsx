@@ -1,11 +1,11 @@
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import { ClockIcon } from "@heroicons/react/24/outline";
 import { TrashIcon } from "@heroicons/react/24/solid";
 
-import { Image, Button } from "@heroui/react";
+import { addToast, Button } from "@heroui/react";
 
 import TimeSetter from "./TimeSetter.jsx";
 
@@ -28,8 +28,35 @@ const VisitTime = ({ place, start, end }) => {
   const [startTime, setStartTime] = useState(start);
   const [endTime, setEndTime] = useState(end);
   const hasUserChangedRef = useRef(false);
+  const lastValidationRef = useRef(true);
+
+  useEffect(() => {
+    setStartTime(start);
+    setEndTime(end);
+    hasUserChangedRef.current = false;
+  }, [start, end]);
+
+  const isTimeValid = useMemo(() => {
+    if (!startTime || !endTime) return true;
+
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
+
+    return startMinutes < endMinutes;
+  }, [startTime, endTime]);
+
+  function timeToMinutes(timeString) {
+    if (!timeString) return 0;
+    const [hours, minutes] = timeString.split(":").map(Number);
+    return hours * 60 + minutes;
+  }
 
   function handleUpdateTime() {
+    if (!isTimeValid) {
+      console.warn("Cannot update: End time must be after start time");
+      return;
+    }
+
     fetch(`/api/trips/places/${place.place_id}`, {
       method: "PATCH",
       headers: {
@@ -45,9 +72,19 @@ const VisitTime = ({ place, start, end }) => {
 
   useEffect(() => {
     if (hasUserChangedRef.current && startTime && endTime) {
-      handleUpdateTime();
+      if (isTimeValid) {
+        handleUpdateTime();
+      } else if (lastValidationRef.current !== isTimeValid) {
+        addToast({
+          title: "Invalid Time Range",
+          description: "End time must be after start time",
+          color: "danger",
+          timeout: 5000,
+        });
+      }
+      lastValidationRef.current = isTimeValid;
     }
-  }, [startTime, endTime]);
+  }, [startTime, endTime, isTimeValid]);
 
   const handleSetStartTime = (newTime) => {
     setStartTime(newTime);
@@ -61,10 +98,26 @@ const VisitTime = ({ place, start, end }) => {
 
   return (
     <div className="flex items-center gap-1">
-      <ClockIcon className="h-5 aspect-square text-subcolor" />
-      <TimeSetter time={startTime} setTime={handleSetStartTime} />
-      <span className="text-sm text-subcolor">-</span>
-      <TimeSetter time={endTime} setTime={handleSetEndTime} />
+      <ClockIcon
+        className={`h-5 aspect-square ${
+          !isTimeValid ? "text-red-500" : "text-subcolor"
+        }`}
+      />
+      <TimeSetter
+        time={startTime}
+        setTime={handleSetStartTime}
+        isError={!isTimeValid}
+      />
+      <span
+        className={`text-sm ${!isTimeValid ? "text-red-500" : "text-subcolor"}`}
+      >
+        -
+      </span>
+      <TimeSetter
+        time={endTime}
+        setTime={handleSetEndTime}
+        isError={!isTimeValid}
+      />
       <Button
         variant="bordered"
         className="flex text-xs text-black font-medium border ml-1 h-8 border-bcolor rounded-full"
@@ -84,6 +137,7 @@ const VisitTime = ({ place, start, end }) => {
 
 const PlaceCard = ({ index, place, setPlaces, showTimeInfo }) => {
   const { accessToken, fetchData } = useContext(AppContext);
+  const { setExtraInfo } = useContext(ExtraInfoContext);
 
   const {
     attributes,
@@ -117,6 +171,10 @@ const PlaceCard = ({ index, place, setPlaces, showTimeInfo }) => {
     } catch (error) {
       console.error("Error deleting place:", error);
     }
+    setExtraInfo({
+      visible: false,
+      placeDetails: null,
+    });
     await fetchData();
   };
 

@@ -3,7 +3,7 @@ import {
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
 } from "@heroicons/react/24/solid";
-import { Button } from "@heroui/react";
+import { Button, ToastProvider } from "@heroui/react";
 
 import TripForm from "./TripForm";
 import { AppContext } from "../App";

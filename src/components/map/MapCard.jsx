@@ -230,6 +230,10 @@ const MapCard = () => {
         ) : (
           <Map
             defaultZoom={16}
+            defaultCenter={{
+              lat: currentPlaces[0]?.location?.lat || 0,
+              lng: currentPlaces[0]?.location?.lng || 0,
+            }}
             mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}
             disableDefaultUI={true}
             reuseMaps={true}

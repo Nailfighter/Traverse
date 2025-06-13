@@ -32,13 +32,14 @@ async function fetchTripItinerary(token, trip_id) {
 
 export default function App() {
   const [accessToken, setAccessToken] = useState(null);
+  const [isAnnonymous, setIsAnnonymous] = useState(false);
   const [allUserTrips, setAllUserTrips] = useState([]);
   const [currentTrip, setCurrentTrip] = useState({
     tripHeader: null,
     itinerary: null,
   });
   const [emptyTrips, setEmptyTrips] = useState(true);
-
+  const [places, setPlaces] = useState([]);
   const [selectedDay, setSelectedDay] = useState("1");
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [routes, setRoutes] = useState([]);
@@ -127,7 +128,7 @@ export default function App() {
     };
 
     fetchRoutes();
-  }, [currentTrip.itinerary, selectedDay]);
+  }, [currentTrip.itinerary, selectedDay, places]);
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
@@ -146,8 +147,13 @@ export default function App() {
             setSelectedPlace,
             routes,
             setRoutes,
+            places,
+            setPlaces,
+            isAnnonymous,
+            setIsAnnonymous,
           }}
         >
+          
           <div className="flex flex-row w-screen h-screen max-h-screen overflow-hidden">
             <SideBar />
             <div className="w-full h-full flex flex-col overflow-hidden">

@@ -6,13 +6,14 @@ const AutoPlaceInput = ({
   setDestination,
   destinationError,
   setDestinationError,
+  disabled = false,
   noOfPredictions = 5,
   includeLocality = true,
   label = "Where are you going?",
 }) => {
   const [predictions, setPredictions] = useState([]);
   const [token, setToken] = useState(null);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeIndex, setActiveIndex] = useState(0);
   const requestIdRef = useRef(0);
   const inputRef = useRef(null);
   const listboxRef = useRef(null);
@@ -28,6 +29,8 @@ const AutoPlaceInput = ({
   }, []);
 
   const handleInputChange = async (value) => {
+    if (disabled) return;
+
     setDestination(value);
     setActiveIndex(-1);
 
@@ -64,8 +67,10 @@ const AutoPlaceInput = ({
   };
 
   const handlePredictionClick = async (placePrediction) => {
+    if (disabled) return;
+
     try {
-      const place = placePrediction.toPlace();
+      const place = await placePrediction.toPlace();
       await place.fetchFields({
         fields: ["formattedAddress", "displayName"],
       });
@@ -74,7 +79,7 @@ const AutoPlaceInput = ({
       );
       setPredictions([]);
       setDestinationError(false);
-      setActiveIndex(-1);
+      setActiveIndex(0);
 
       const { AutocompleteSessionToken } = await google.maps.importLibrary(
         "places"
@@ -88,7 +93,7 @@ const AutoPlaceInput = ({
   };
 
   const handleKeyDown = (e) => {
-    if (predictions.length === 0) return;
+    if (disabled || predictions.length === 0) return;
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -103,17 +108,13 @@ const AutoPlaceInput = ({
       if (activeIndex >= 0 && activeIndex < predictions.length) {
         const selectedSuggestion = predictions[activeIndex];
         if (selectedSuggestion && selectedSuggestion.placePrediction) {
-          console.log(
-            "Selected suggestion:",
-            selectedSuggestion.placePrediction.text
-          );
           handlePredictionClick(selectedSuggestion.placePrediction);
         }
       }
     } else if (e.key === "Escape") {
       e.preventDefault();
       setPredictions([]);
-      setActiveIndex(-1);
+      setActiveIndex(0);
     }
   };
 
@@ -126,10 +127,16 @@ const AutoPlaceInput = ({
     }
   }, [activeIndex]);
 
-  // Reset activeIndex when predictions change
   useEffect(() => {
-    setActiveIndex(-1);
+    setActiveIndex(0);
   }, [predictions]);
+
+  useEffect(() => {
+    if (disabled) {
+      setPredictions([]);
+      setActiveIndex(0);
+    }
+  }, [disabled]);
 
   return (
     <div className="relative w-full">
@@ -145,13 +152,14 @@ const AutoPlaceInput = ({
         onValueChange={handleInputChange}
         isInvalid={destinationError}
         errorMessage={destinationError ? "Destination is required" : ""}
-        onFocus={() => setDestinationError(false)}
+        onFocus={() => !disabled && setDestinationError(false)}
         ref={inputRef}
         autoComplete="off"
         onKeyDown={handleKeyDown}
+        isDisabled={disabled}
       />
 
-      {predictions.length > 0 && (
+      {predictions.length > 0 && !disabled && (
         <Listbox
           aria-label="Autocomplete suggestions"
           className="absolute z-10 w-full max-h-60 mt-overflow-y-auto bg-white border border-gray-300 rounded-xl shadow-lg mt-0.5"

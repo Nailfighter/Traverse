@@ -171,10 +171,12 @@ const PlaceInfoCard = () => {
                     {`${placeDetails.userRatingCount} Reviews`}
                   </a>
                   <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
-                  {`${placeDetails?.postalAddress?.locality}`}
-                  {placeDetails?.postalAddress?.administrativeArea
-                    ? `, ${placeDetails.postalAddress.administrativeArea}`
-                    : ""}
+                  {[
+                    placeDetails?.postalAddress?.locality,
+                    placeDetails?.postalAddress?.administrativeArea,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
                 </div>
               )}
             </div>

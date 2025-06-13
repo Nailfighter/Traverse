@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 
-export async function getPlaceID(placeName, destination) {
+export async function getPlaceID(placeName, destination = "") {
   const response = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
     {
@@ -14,6 +14,7 @@ export async function getPlaceID(placeName, destination) {
     }
   );
   const data = await response.json();
+
   return data.places?.[0]?.id;
 }
 
@@ -40,7 +41,6 @@ export async function getPlacePhoto(
 ) {
   const placeID = await getPlaceID(placeName);
   const photoPath = await getPlacePhotoAdr(placeID);
-
   const response = await fetch(
     `https://places.googleapis.com/v1/${photoPath.name}/media?key=${process.env.VITE_GOOGLE_MAPS_API_KEY}&maxHeightPx=${maxHeightPx}&maxWidthPx=${maxWidthPx}`
   );
@@ -50,7 +50,7 @@ export async function getPlacePhoto(
 
 export async function getPlaceBanner(placeName) {
   try {
-    const img = await getPlacePhoto(placeName, 1200, 800);
+    const img = await getPlacePhoto(placeName, 2200, 1600);
     return { image: img };
   } catch (err) {
     return { error: `Could not fetch banner for "${place}"` };

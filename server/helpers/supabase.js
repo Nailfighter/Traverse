@@ -27,7 +27,6 @@ export async function createTrip(req) {
       budget,
       notes,
     } = req.body;
-
     const banner = await getPlaceBanner(destination);
 
     const { data, error } = await supabase
@@ -235,7 +234,6 @@ export async function addPlaceToItinerary(tripId, day_number, placeDetails) {
 }
 
 export async function updatePlaceInItinerary(placeId, updatedPlaceDetails) {
-  // Build update object only with non-null/undefined fields
   const updateObj = {};
   if (updatedPlaceDetails.start_time !== undefined) {
     updateObj.start_time = updatedPlaceDetails.start_time;

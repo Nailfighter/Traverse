@@ -10,29 +10,21 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  addToast,
 } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "./RouterPage";
 import { useNavigate } from "react-router-dom";
+import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 async function handleEmailLogin({
   email,
   password,
-  rememberMe,
   fullName,
   isSigningUp,
   navigate,
   setAuthErrorMessage,
 }) {
-  if (rememberMe) {
-    localStorage.setItem(
-      "rememberedInfo",
-      JSON.stringify({ email, password, fullName })
-    );
-  } else {
-    localStorage.removeItem("rememberedInfo");
-  }
-
   setAuthErrorMessage("");
 
   const { error } = isSigningUp
@@ -48,8 +40,20 @@ async function handleEmailLogin({
     return false;
   } else {
     setAuthErrorMessage("");
-    navigate("/app");
-    return true;
+    if (isSigningUp) {
+      addToast({
+        title: "Sign Up Successful",
+        description:
+          "Please check your email to verify your account before signing in.",
+        color: "primary",
+        duration: 5000,
+      });
+
+      return true;
+    } else {
+      navigate("/app");
+      return true;
+    }
   }
 }
 
@@ -61,10 +65,25 @@ async function handlePasswordReset(email) {
   return { error };
 }
 
-const handleGuestLogin = () => {
-  console.log("Guest access triggered");
-  // Optionally route to trial experience
+const handleGuestLogin = async (navigate, setAuthErrorMessage) => {
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if (error) {
+    setAuthErrorMessage(error.message);
+    return false;
+  } else {
+    setAuthErrorMessage("");
+    navigate("/app");
+    return true;
+  }
 };
+
+const Logo = () => (
+  <div className="flex items-center gap-2 justify-center py-3 bg-white">
+    <PaperAirplaneIcon className="h-8 w-8 text-black transform rotate-[315deg] translate-x-0.5" />
+
+    <h1 className=" mt-2 text-3xl font-bold text-gray-800">Traverse</h1>
+  </div>
+);
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -76,13 +95,9 @@ const AuthPage = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [fullNameError, setFullNameError] = useState("");
-  const [rememberMe, setRememberMe] = useState(
-    !!localStorage.getItem("rememberedInfo")
-  );
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [authErrorMessage, setAuthErrorMessage] = useState("");
 
-  // Forgot Password Modal States
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetEmailError, setResetEmailError] = useState("");
@@ -142,15 +157,22 @@ const AuthPage = () => {
 
     if (validateCredentials()) return;
 
-    await handleEmailLogin({
+    const success = await handleEmailLogin({
       email,
       password,
-      rememberMe,
       fullName,
       isSigningUp,
       navigate,
       setAuthErrorMessage,
     });
+
+    // If signup was successful, switch to sign in mode
+    if (success && isSigningUp) {
+      setIsSigningUp(false);
+      // Clear form fields except email for convenience
+      setPassword("");
+      setFullName("");
+    }
   };
 
   const handleForgotPasswordClick = (e) => {
@@ -209,16 +231,33 @@ const AuthPage = () => {
     setResetErrorMessage("");
   };
 
+  // Clear verification message when switching between sign up/sign in
+  const handleToggleAuth = (newIsSigningUp) => {
+    setIsSigningUp(newIsSigningUp);
+    setAuthErrorMessage("");
+  };
+
+  const authBackgroundStyle = ["/ULURU.jpg", "/Sunset2.jpg"];
+  const [backgroundImage, setBackgroundImage] = useState("");
+
+  useEffect(() => {
+    setBackgroundImage(
+      authBackgroundStyle[
+        Math.floor(Math.random() * authBackgroundStyle.length)
+      ]
+    );
+  }, []);
+
   return (
     <>
       <div
         className="bg-cover bg-center h-screen w-full p-20 flex items-center justify-center bg-gray-100"
         style={{
-          backgroundImage: "url('/1273703.png')",
+          backgroundImage: `url(${backgroundImage})`,
         }}
       >
-        <div className="w-full h-full rounded-4xl border-8 border-white overflow-hidden grid grid-cols-2">
-          <div className="relative flex flex-col justify-end h-full p-10 text-white rounded-r-4xl overflow-visible bg-gradient-to-t from-black/70 via-black/40 to-transparent">
+        <div className="w-full h-full rounded-4xl border-8 border-white overflow-hidden flex">
+          <div className="relative flex flex-grow flex-col justify-end  p-10 text-white rounded-r-4xl overflow-visible bg-gradient-to-t from-black/70 via-black/40 to-transparent">
             <CutOut className="absolute top-0 right-0 fill-white" />
             <CutOut className="absolute bottom-0 right-0 rotate-90 fill-white" />
             <div className="z-10">
@@ -226,236 +265,243 @@ const AuthPage = () => {
                 Travel Smarter.
               </h1>
               <h2 className="text-2xl font-semibold text-gray-200 mt-2">
-                Let AI craft your next adventure.
+                Your next adventure, perfectly mapped.
               </h2>
             </div>
           </div>
-
-          <div className="bg-white p-20 flex flex-col gap-8 justify-center">
-            <div className="text-center">
-              <h2 className="text-4xl font-bold">
-                {isSigningUp ? "Create Account" : "Welcome Back"}
-              </h2>
-              <p className="text-gray-500">
-                {isSigningUp
-                  ? "Fill in your details to create an account"
-                  : "Enter your email and password to access your trips"}
-              </p>
-            </div>
-            <AnimatePresence>
-              {authErrorMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <svg
-                          className="h-5 w-5 text-red-400"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-red-800">
-                          {authErrorMessage}
-                        </p>
+          <div className="w-140 flex flex-col bg-white ">
+            <Logo />
+            <div className=" p-20 flex-grow-1 flex flex-col gap-8 justify-center">
+              <div className="text-center">
+                <h2 className="text-4xl font-bold">
+                  {isSigningUp ? "Create Account" : "Welcome Back"}
+                </h2>
+                <p className="text-gray-500">
+                  {isSigningUp
+                    ? "Fill in your details to create an account"
+                    : "Enter your email and password to access your trips"}
+                </p>
+              </div>
+              <AnimatePresence>
+                {authErrorMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="h-5 w-5 text-red-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-red-800">
+                            {authErrorMessage}
+                          </p>
+                        </div>
                       </div>
                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <Form
+                className="w-full flex flex-col gap-8 items-center"
+                onSubmit={(e) => {
+                  handleEmailSubmit(e);
+                }}
+              >
+                <motion.div
+                  layout
+                  className="w-full gap-4 flex flex-col"
+                  transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
+                  style={{ minHeight: isSigningUp ? "280px" : "200px" }}
+                >
+                  <div className="w-full">
+                    <label className="block mb-1 font-medium" htmlFor="email">
+                      Email
+                    </label>
+                    <Input
+                      id="email"
+                      placeholder="Enter your email"
+                      className="w-full"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError("");
+                      }}
+                      isInvalid={!!emailError}
+                      errorMessage={emailError}
+                    />
+                  </div>
+
+                  <AnimatePresence initial={false}>
+                    {isSigningUp && (
+                      <motion.div
+                        key="fullname"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.4 }}
+                        className="w-full"
+                      >
+                        <label
+                          className="block mb-1 font-medium"
+                          htmlFor="fullname"
+                        >
+                          Full Name
+                        </label>
+                        <Input
+                          id="fullname"
+                          placeholder="Enter your full name"
+                          className="w-full"
+                          value={fullName}
+                          onChange={(e) => {
+                            setFullName(e.target.value);
+                            if (fullNameError) setFullNameError("");
+                          }}
+                          isInvalid={!!fullNameError}
+                          errorMessage={fullNameError}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="w-full">
+                    <label
+                      className="block mb-1 font-medium"
+                      htmlFor="password"
+                    >
+                      Password
+                    </label>
+                    <Input
+                      id="password"
+                      placeholder="Enter your password"
+                      className="w-full"
+                      type={isVisible ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (passwordError) setPasswordError("");
+                      }}
+                      isInvalid={!!passwordError}
+                      errorMessage={passwordError}
+                      endContent={
+                        <button
+                          aria-label="toggle password visibility"
+                          className="focus:outline-none"
+                          type="button"
+                          onClick={toggleVisibility}
+                        >
+                          {isVisible ? (
+                            <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                          ) : (
+                            <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                          )}
+                        </button>
+                      }
+                    />
+                  </div>
+
+                  <div className="w-full flex items-center justify-end text-sm font-medium">
+                    {!isSigningUp && (
+                      <a
+                        href="#"
+                        onClick={handleForgotPasswordClick}
+                        className="text-black hover:underline cursor-pointer"
+                      >
+                        Forgot Password?
+                      </a>
+                    )}
                   </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
-            <Form
-              className="w-full flex flex-col gap-8 items-center"
-              onSubmit={(e) => {
-                handleEmailSubmit(e);
-              }}
-            >
-              <motion.div
-                layout
-                className="w-full gap-4 flex flex-col"
-                transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
-                style={{ minHeight: isSigningUp ? "280px" : "200px" }}
-              >
-                <div className="w-full">
-                  <label className="block mb-1 font-medium" htmlFor="email">
-                    Email
-                  </label>
-                  <Input
-                    id="email"
-                    placeholder="Enter your email"
-                    className="w-full"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (emailError) setEmailError("");
-                    }}
-                    isInvalid={!!emailError}
-                    errorMessage={emailError}
-                  />
+
+                <motion.div
+                  layout
+                  className="w-[70%] gap-4 flex flex-col"
+                  transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
+                >
+                  <Button
+                    name="emailSignIn"
+                    type="submit"
+                    variant="light"
+                    className="bg-black w-full font-semibold text-white hover:!bg-[#2e2e2e]"
+                  >
+                    {isSigningUp ? "Sign Up" : "Sign In"}
+                  </Button>
+
+                  <p className="text-center text-sm text-gray-600">
+                    {isSigningUp ? (
+                      <>
+                        Already have an account?{" "}
+                        <motion.a
+                          href="#"
+                          className="text-black font-semibold hover:underline cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleToggleAuth(false);
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          Sign In
+                        </motion.a>
+                      </>
+                    ) : (
+                      <>
+                        Don't have an account?{" "}
+                        <motion.a
+                          href="#"
+                          className="text-black font-semibold hover:underline cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleToggleAuth(true);
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          Sign Up
+                        </motion.a>
+                      </>
+                    )}
+                  </p>
+                </motion.div>
+
+                <div className="flex items-center w-full gap-4 ">
+                  <hr className="flex-grow border-gray-300" />
+                  <span className="text-sm text-gray-500">or</span>
+                  <hr className="flex-grow border-gray-300" />
                 </div>
 
-                <AnimatePresence initial={false}>
-                  {isSigningUp && (
-                    <motion.div
-                      key="fullname"
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.4 }}
-                      className="w-full"
-                    >
-                      <label
-                        className="block mb-1 font-medium"
-                        htmlFor="fullname"
-                      >
-                        Full Name
-                      </label>
-                      <Input
-                        id="fullname"
-                        placeholder="Enter your full name"
-                        className="w-full"
-                        value={fullName}
-                        onChange={(e) => {
-                          setFullName(e.target.value);
-                          if (fullNameError) setFullNameError("");
-                        }}
-                        isInvalid={!!fullNameError}
-                        errorMessage={fullNameError}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div className="w-full">
-                  <label className="block mb-1 font-medium" htmlFor="password">
-                    Password
-                  </label>
-                  <Input
-                    id="password"
-                    placeholder="Enter your password"
-                    className="w-full"
-                    type={isVisible ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (passwordError) setPasswordError("");
-                    }}
-                    isInvalid={!!passwordError}
-                    errorMessage={passwordError}
-                    endContent={
-                      <button
-                        aria-label="toggle password visibility"
-                        className="focus:outline-none"
-                        type="button"
-                        onClick={toggleVisibility}
-                      >
-                        {isVisible ? (
-                          <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                        ) : (
-                          <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                        )}
-                      </button>
+                <div className="text-center w-[70%]">
+                  <p className="text-sm text-gray-500 mb-2">
+                    Not sure yet? Try one trip for free without signing up.
+                  </p>
+                  <Button
+                    variant="flat"
+                    className="w-full text-sm font-medium bg-gray-100 text-black hover:bg-gray-200"
+                    onPress={() =>
+                      handleGuestLogin(navigate, setAuthErrorMessage)
                     }
-                  />
+                  >
+                    Try One Trip Free as Guest
+                  </Button>
                 </div>
-
-                <div className="w-full flex items-center justify-end text-sm font-medium">
-                  {!isSigningUp && (
-                    <a
-                      href="#"
-                      onClick={handleForgotPasswordClick}
-                      className="text-black hover:underline cursor-pointer"
-                    >
-                      Forgot Password?
-                    </a>
-                  )}
-                </div>
-              </motion.div>
-
-              <motion.div
-                layout
-                className="w-[70%] gap-4 flex flex-col"
-                transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
-              >
-                <Button
-                  name="emailSignIn"
-                  type="submit"
-                  variant="light"
-                  className="bg-black w-full font-semibold text-white hover:!bg-[#2e2e2e]"
-                >
-                  {isSigningUp ? "Sign Up" : "Sign In"}
-                </Button>
-
-                <p className="text-center text-sm text-gray-600">
-                  {isSigningUp ? (
-                    <>
-                      Already have an account?{" "}
-                      <motion.a
-                        href="#"
-                        className="text-black font-semibold hover:underline cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setIsSigningUp(false);
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        Sign In
-                      </motion.a>
-                    </>
-                  ) : (
-                    <>
-                      Don't have an account?{" "}
-                      <motion.a
-                        href="#"
-                        className="text-black font-semibold hover:underline cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setIsSigningUp(true);
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        Sign Up
-                      </motion.a>
-                    </>
-                  )}
-                </p>
-              </motion.div>
-
-              <div className="flex items-center w-full gap-4 ">
-                <hr className="flex-grow border-gray-300" />
-                <span className="text-sm text-gray-500">or</span>
-                <hr className="flex-grow border-gray-300" />
-              </div>
-
-              <div className="text-center w-[70%]">
-                <p className="text-sm text-gray-500 mb-2">
-                  Not sure yet? Try one trip for free without signing up.
-                </p>
-                <Button
-                  variant="flat"
-                  className="w-full text-sm font-medium bg-gray-100 text-black hover:bg-gray-200"
-                  onPress={handleGuestLogin}
-                >
-                  Try One Trip Free as Guest
-                </Button>
-              </div>
-            </Form>
+              </Form>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Forgot Password Modal */}
       <Modal
         isOpen={isForgotPasswordOpen}
         onClose={handleModalClose}
@@ -581,7 +627,6 @@ const AuthPage = () => {
     </>
   );
 };
-
 const CutOut = ({ className }) => (
   <svg width="25" height="25" viewBox="0 0 200 200" className={className}>
     <defs>

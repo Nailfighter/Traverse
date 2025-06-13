@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from "react";
+import React, { useEffect, useContext, useState, use } from "react";
 import {
   Modal,
   ModalContent,
@@ -11,14 +11,40 @@ import {
   Input,
   DatePicker,
   Textarea,
+  addToast,
 } from "@heroui/react";
 import { today, getLocalTimeZone } from "@internationalized/date";
+import { motion } from "framer-motion";
 
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { CurrencyDollarIcon } from "@heroicons/react/24/outline";
 
 import AutoPlaceInput from "./AutoPlaceInput";
 import { AppContext } from "../App";
+
+const Loader = () => {
+  return (
+    <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
+      <div className="flex gap-2">
+        {[0, 1, 2].map((index) => (
+          <motion.div
+            key={index}
+            className="w-3 h-3 bg-black rounded-full"
+            animate={{
+              y: [-8, 8, -8],
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: index * 0.2,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const getItinerary = async (tripDetails, accessToken) => {
   try {
@@ -32,7 +58,6 @@ const getItinerary = async (tripDetails, accessToken) => {
     });
 
     const data = await response.json();
-    console.log("Itinerary response:", data);
     return data;
   } catch (error) {
     console.error("Failed to fetch itinerary:", error);
@@ -48,9 +73,25 @@ export default function TripForm() {
   const [noOfTravelers, setNoOfTravelers] = useState(1);
   const [budget, setBudget] = useState("Low");
   const [preferences, setPreferences] = useState("");
-  const { accessToken, fetchData, emptyTrips } = useContext(AppContext);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const { accessToken, fetchData, emptyTrips, isAnnonymous } =
+    useContext(AppContext);
   const [destinationError, setDestinationError] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
+
+  useEffect(() => {
+    setIsEnabled(!isAnnonymous);
+  }, [isAnnonymous]);
+
+  useEffect(() => {
+    if (emptyTrips) {
+      const timeout = setTimeout(() => {
+        onOpen();
+      }, 700);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [emptyTrips, onOpen]);
 
   const resetFields = () => {
     setDestination("");
@@ -61,7 +102,21 @@ export default function TripForm() {
     setPreferences("");
   };
 
-  const handleTripCreation = () => {
+  const handleButtonClick = () => {
+    if (!isEnabled) {
+      addToast({
+        title: "Sign In Required",
+        description:
+          "Only one trip allowed for guest users. Please sign in to create more trips.",
+        color: "warning",
+      });
+      return;
+    }
+
+    onOpen();
+  };
+
+  const handleTripCreation = async () => {
     if (!destination.trim()) {
       setDestinationError(true);
       return;
@@ -71,52 +126,66 @@ export default function TripForm() {
     const tripDetails = {
       title: `Trip to ${destination}`,
       destination,
-      start_date: startDate.toString(),
-      end_date: startDate.add({ days: noOfDays }).toString(),
+      start_date: startDate.add({ days: 1 }).toString(),
+      end_date: startDate.add({ days: noOfDays + 1 }).toString(),
       noOfDays,
       noOfTravelers,
       budget,
       notes: preferences,
     };
-    console.log("Trip Details:", tripDetails);
 
-    getItinerary(tripDetails, accessToken)
-      .then((data) => {
+    setIsLoading(true);
+
+    try {
+      const data = await getItinerary(tripDetails, accessToken);
+
+      if (!data || data.error) {
+        addToast({
+          title: "Trip Creation Failed",
+          description:
+            data?.error || "Failed to create your trip. Please try again.",
+          color: "danger",
+        });
+        console.error("Failed to create trip:", data?.error || "Unknown error");
+      } else {
         onClose();
         resetFields();
-        if (!data || data.error) {
-          console.error(
-            "Failed to create trip:",
-            data?.error || "Unknown error"
-          );
-          return;
-        }
-
         fetchData();
-      })
-      .catch((err) => {
-        console.error(err);
+      }
+    } catch (err) {
+      addToast({
+        title: "Trip Creation Failed",
+        description: "An unexpected error occurred. Please try again.",
+        color: "danger",
       });
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (emptyTrips) {
+      if (emptyTrips && isEnabled) {
         onOpen();
       }
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [emptyTrips]);
+  }, [emptyTrips, isEnabled]);
 
   return (
     <div className="px-2 mt-6 mb-1">
       <button
-        variant="light"
-        onClick={onOpen}
-        className="w-full button-animation swivel hover:cursor-pointer"
+        onClick={handleButtonClick}
+        className={`w-full transition-all duration-200 ${
+          isEnabled
+            ? "button-animation swivel hover:cursor-pointer text-black hover:text-gray-700"
+            : "text-gray-500 cursor-not-allowed opacity-50 hover:opacity-70"
+        }`}
+        disabled={isLoading}
       >
-        <PlusIcon className="" />
+        <PlusIcon className="w-6 h-6 mx-auto" />
       </button>
 
       <Modal
@@ -125,7 +194,7 @@ export default function TripForm() {
         onClose={onClose}
         isKeyboardDismissDisabled={true}
         size="md"
-        isDismissable={!emptyTrips}
+        isDismissable={!emptyTrips && !isLoading}
         hideCloseButton={emptyTrips}
       >
         <ModalContent>
@@ -149,6 +218,7 @@ export default function TripForm() {
                     setDestination={setDestination}
                     destinationError={destinationError}
                     setDestinationError={setDestinationError}
+                    disabled={isLoading}
                   />
 
                   <DatePicker
@@ -157,6 +227,7 @@ export default function TripForm() {
                     minValue={today(getLocalTimeZone())}
                     value={startDate}
                     onChange={setStartDate}
+                    isDisabled={isLoading}
                   />
 
                   <span className="text-sm flex gap-2 w-full justify-between items-center">
@@ -166,6 +237,7 @@ export default function TripForm() {
                       number={noOfDays}
                       max={7}
                       unit="days"
+                      disabled={isLoading}
                     />
                   </span>
 
@@ -176,12 +248,17 @@ export default function TripForm() {
                       number={noOfTravelers}
                       max={10}
                       unit="people"
+                      disabled={isLoading}
                     />
                   </span>
 
                   <span className="text-sm w-full flex flex-col gap-2">
                     What is Your Budget?
-                    <BudgetInput budget={budget} setBudget={setBudget} />
+                    <BudgetInput
+                      budget={budget}
+                      setBudget={setBudget}
+                      disabled={isLoading}
+                    />
                   </span>
 
                   <Textarea
@@ -192,13 +269,19 @@ export default function TripForm() {
                     isClearable
                     value={preferences}
                     onValueChange={setPreferences}
+                    isDisabled={isLoading}
                   />
                 </Form>
               </ModalBody>
 
               <ModalFooter>
                 {!emptyTrips && (
-                  <Button color="danger" variant="light" onPress={onClose}>
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={onClose}
+                    isDisabled={isLoading}
+                  >
                     Cancel
                   </Button>
                 )}
@@ -207,8 +290,10 @@ export default function TripForm() {
                   variant="light"
                   className="bg-black px-3 text-[12px] font-semibold text-white hover:!bg-[#2e2e2e] ml-4"
                   onPress={handleTripCreation}
+                  isLoading={isLoading}
+                  isDisabled={isLoading}
                 >
-                  Create Trip
+                  {isLoading ? "Creating Trip..." : "Create Trip"}
                 </Button>
               </ModalFooter>
             </div>
@@ -219,7 +304,7 @@ export default function TripForm() {
   );
 }
 
-const NumberInput = ({ setNumber, number, max, unit }) => {
+const NumberInput = ({ setNumber, number, max, unit, disabled }) => {
   const increment = () => setNumber((c) => Math.min(max, c + 1));
   const decrement = () => setNumber((c) => Math.max(1, c - 1));
 
@@ -232,6 +317,7 @@ const NumberInput = ({ setNumber, number, max, unit }) => {
         onPress={decrement}
         className="text-xl text-[#a1a1aa]"
         radius="full"
+        isDisabled={disabled}
       >
         −
       </Button>
@@ -254,6 +340,7 @@ const NumberInput = ({ setNumber, number, max, unit }) => {
         onPress={increment}
         className="text-xl text-[#a1a1aa]"
         radius="full"
+        isDisabled={disabled}
       >
         +
       </Button>
@@ -261,7 +348,7 @@ const NumberInput = ({ setNumber, number, max, unit }) => {
   );
 };
 
-const BudgetInput = ({ budget, setBudget }) => {
+const BudgetInput = ({ budget, setBudget, disabled }) => {
   const budgetOptions = {
     Low: "500 - 1000 USD",
     Medium: "1000 - 2500 USD",
@@ -273,12 +360,14 @@ const BudgetInput = ({ budget, setBudget }) => {
       {Object.keys(budgetOptions).map((option, index) => (
         <div
           key={option}
-          className={`w-full flex flex-col gap-1 border-2 rounded-lg p-2 cursor-pointer ${
+          className={`w-full flex flex-col gap-1 border-2 rounded-lg p-2 ${
+            disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+          } ${
             budget === option
               ? "bg-gray-200 border-gray-200"
               : "border-gray-200 hover:bg-gray-200"
           }`}
-          onClick={() => setBudget(option)}
+          onClick={() => !disabled && setBudget(option)}
         >
           <div className="flex items-center justify-center">
             {Array.from({ length: index + 1 }).map((_, i) => (

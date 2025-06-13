@@ -22,7 +22,7 @@ import { AppContext } from "../App.jsx";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { accessToken, fetchData, currentTrip, setCurrentTrip } =
+  const { accessToken, fetchData, currentTrip, isAnnonymous, setIsAnnonymous } =
     useContext(AppContext);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
@@ -98,12 +98,26 @@ const Header = () => {
       } = await supabase.auth.getSession();
 
       const fullName = session?.user?.user_metadata?.fullName;
+      const isAnnonymous = session?.user?.is_anonymous;
+      setIsAnnonymous(isAnnonymous);
       if (fullName) {
         const initials = fullName
           .split(" ")
           .map((name) => name.charAt(0).toUpperCase())
           .join("");
         setPPLetters(initials);
+      }
+      if (isAnnonymous) {
+        setPPLetters("G");
+      } else {
+        setPPLetters(
+          session?.user?.user_metadata?.fullName
+            ? session.user.user_metadata.fullName
+                .split(" ")
+                .map((name) => name.charAt(0).toUpperCase())
+                .join("")
+            : "G"
+        );
       }
     };
     fetchSession();
@@ -124,25 +138,27 @@ const Header = () => {
             </Button>
           </DropdownTrigger>
         </DropdownTrigger>
-        <DropdownMenu aria-label="Static Actions">
-          <DropdownItem
-            key="rename"
-            onPress={() => {
-              setText(title);
-              onRenameOpen();
-            }}
-          >
-            Rename Trip
-          </DropdownItem>
-          <DropdownItem
-            key="delete"
-            className="text-danger"
-            color="danger"
-            onPress={onDeleteOpen}
-          >
-            Delete Trip
-          </DropdownItem>
-        </DropdownMenu>
+        {!isAnnonymous && (
+          <DropdownMenu aria-label="Static Actions">
+            <DropdownItem
+              key="rename"
+              onPress={() => {
+                setText(title);
+                onRenameOpen();
+              }}
+            >
+              Rename Trip
+            </DropdownItem>
+            <DropdownItem
+              key="delete"
+              className="text-danger"
+              color="danger"
+              onPress={onDeleteOpen}
+            >
+              Delete Trip
+            </DropdownItem>
+          </DropdownMenu>
+        )}
       </Dropdown>
       <Dropdown>
         <DropdownTrigger>
@@ -163,7 +179,7 @@ const Header = () => {
               handleLogout({ navigate });
             }}
           >
-            Logout
+            {!isAnnonymous ? "Logout" : "Exit Guest Account"}
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>

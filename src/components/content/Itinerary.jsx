@@ -1,6 +1,5 @@
 import { useEffect, useContext, useState } from "react";
 import { Button } from "@heroui/react";
-import { Tabs, Tab } from "@heroui/react";
 
 import {
   DndContext,
@@ -17,55 +16,83 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 import PlaceCard from "./PlaceCard.jsx";
-import AddPlaceForm from "./AddPlaceForm.jsx";
 
 import { AppContext } from "../../App.jsx";
 import TravelTime from "../map/TravelTime.jsx";
 
-const DayTabs = ({ fullItinerary, setPlaces, selectedDay, setSelectedDay }) => {
-  const days = Object.keys(fullItinerary);
+function formatDuration(input) {
+  if (!input || typeof input !== "string") {
+    return "N/A";
+  }
 
-  return (
-    <Tabs
-      selectedKey={selectedDay}
-      onSelectionChange={(key) => {
-        setSelectedDay(key);
-        const sortedPlaces = [...(fullItinerary[Number(key)] || [])].sort(
-          (a, b) => a.order_index - b.order_index
-        );
-        setPlaces(sortedPlaces);
-      }}
-      radius="full"
-      variant="solid"
-      className="w-full"
-      classNames={{
-        tabList: "flex w-full gap-1",
-        tab: "flex-1 justify-center",
-      }}
-    >
-      {days.map((day) => (
-        <Tab key={day} title={`Day ${day}`} />
-      ))}
-    </Tabs>
-  );
-};
+  const totalSeconds = parseInt(input.replace(/\D/g, ""), 10);
+
+  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (minutes < 60) {
+    return `${minutes} min${minutes !== 1 ? "s" : ""}`;
+  } else if (hours < 24) {
+    const remMinutes = minutes % 60;
+    return `${hours} hr${hours !== 1 ? "s" : ""} ${remMinutes} minute${
+      remMinutes !== 1 ? "s" : ""
+    }`;
+  } else {
+    const remHours = hours % 24;
+    return `${days} day${days !== 1 ? "s" : ""} ${remHours} hour${
+      remHours !== 1 ? "s" : ""
+    }`;
+  }
+}
+
+function metersToMiles(meters) {
+  if (meters == null || isNaN(meters)) return "N/A";
+  const miles = meters / 1609.344;
+  return `${+miles.toFixed(2)} mi`;
+}
 
 const Itinerary = () => {
-  const { currentTrip, selectedDay, setSelectedDay, routes } =
+  const { accessToken, currentTrip, routes, places, setPlaces, selectedDay } =
     useContext(AppContext);
-  const [places, setPlaces] = useState([]);
 
   useEffect(() => {
     if (currentTrip?.itinerary) {
-      const sortedPlaces = [...(currentTrip.itinerary[1] || [])].sort(
-        (a, b) => a.order_index - b.order_index
-      );
+      const sortedPlaces = [
+        ...(currentTrip.itinerary[parseInt(selectedDay)] || []),
+      ].sort((a, b) => a.order_index - b.order_index);
       setPlaces(sortedPlaces);
     }
-  }, [currentTrip]);
+  }, [currentTrip, setPlaces]);
 
   const [timeInfo, showTimeInfo] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor));
+
+  const saveOrder = async (places) => {
+    try {
+      const response = await fetch(`/api/trips/places/order`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          places: places.map((place) => ({
+            place_id: place.place_id,
+            order_index: place.order_index,
+            start_time: place.start,
+            end_time: place.end,
+          })),
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save order");
+      }
+    } catch (error) {
+      console.error("Error saving order:", error);
+    }
+  };
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
@@ -73,34 +100,36 @@ const Itinerary = () => {
 
     if (active.id !== over.id) {
       const oldIndex = places.findIndex(
-        (place) => place.place_id === active.place_id
+        (place) => place.place_id === active.id
       );
-      const newIndex = places.findIndex(
-        (place) => place.place_id === over.place_id
-      );
+      const newIndex = places.findIndex((place) => place.place_id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) {
+        console.warn("Could not find place indices for drag operation");
+        return;
+      }
 
       const newPlaces = arrayMove(places, oldIndex, newIndex);
 
+      const originalTimes = places.map((place) => ({
+        start: place.start,
+        end: place.end,
+      }));
+
       newPlaces.forEach((place, index) => {
         place.order_index = index;
+        place.start = originalTimes[index].start;
+        place.end = originalTimes[index].end;
       });
 
       setPlaces(newPlaces);
+      console.log("New order:", newPlaces);
+      saveOrder(newPlaces);
     }
   };
 
   return (
-    <div className="w-full  flex flex-col gap-4 pt-1 ">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Itinerary</h1>
-        <AddPlaceForm dayNumber={selectedDay} />
-      </div>
-      <DayTabs
-        fullItinerary={currentTrip?.itinerary || { 1: [] }}
-        setPlaces={setPlaces}
-        selectedDay={selectedDay}
-        setSelectedDay={setSelectedDay}
-      />
+    <div className="w-full h-full flex flex-col gap-4 pt-1 ">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -111,7 +140,7 @@ const Itinerary = () => {
           items={places.map((p) => p.place_id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="flex flex-col flex-grow gap-4 h-full overflow-y-scroll overflow-hidden p-4  scrollbar-hide ">
+          <div className="flex flex-col flex-grow gap-4 h-full overflow-y-scroll overflow-hidden p-4 scrollbar-hide ">
             {places.map((place, index) => (
               <div className="flex flex-col gap-4 w-full " key={place.place_id}>
                 <PlaceCard
@@ -119,12 +148,12 @@ const Itinerary = () => {
                   place={place}
                   setPlaces={setPlaces}
                   showTimeInfo={showTimeInfo}
+                  places={places}
                 />
                 {index < places.length - 1 && timeInfo && (
                   <TravelTime
-                    duration={routes[index]?.duration.text || "N/A"}
-                    distance={routes[index]?.distance.text || "N/A"}
-                    mode="car"
+                    duration={formatDuration(routes[index]?.duration)}
+                    distance={metersToMiles(routes[index]?.distance)}
                   />
                 )}
               </div>
