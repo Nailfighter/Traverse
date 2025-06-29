@@ -4,8 +4,8 @@ import { getPlaceBanner } from "../helpers/googleMaps.js";
 import { createClient } from "@supabase/supabase-js";
 import e from "express";
 export const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_KEY
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
 );
 
 export async function createTrip(req) {
@@ -117,11 +117,12 @@ export async function createItinerary(tripId, generatedItinerary) {
 }
 
 export async function getTripsByUserId(userId) {
+  
   const { data, error } = await supabase
-    .from("trips")
-    .select("*")
-    .eq("user_id", userId)
-    .order("last_updated", { ascending: false });
+  .from("trips")
+  .select("*")
+  .eq("user_id", userId)
+  .order("last_updated", { ascending: false });
 
   if (error) {
     return { error: error.message };

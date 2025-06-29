@@ -70,21 +70,24 @@ const Itinerary = () => {
 
   const saveOrder = async (places) => {
     try {
-      const response = await fetch(`/api/trips/places/order`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          places: places.map((place) => ({
-            place_id: place.place_id,
-            order_index: place.order_index,
-            start_time: place.start,
-            end_time: place.end,
-          })),
-        }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/trips/places/order`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            places: places.map((place) => ({
+              place_id: place.place_id,
+              order_index: place.order_index,
+              start_time: place.start,
+              end_time: place.end,
+            })),
+          }),
+        }
+      );
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || "Failed to save order");

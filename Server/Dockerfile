@@ -1,7 +1,7 @@
 # Dockerfile
-FROM node:18
+FROM node:22
 
-WORKDIR /app
+WORKDIR /server
 
 # Copy only package files first to cache npm install
 COPY package*.json ./
@@ -10,9 +10,8 @@ RUN npm install
 # Now copy the rest of the files
 COPY . .
 
-# Expose Vite and Express ports
-EXPOSE 5173
-EXPOSE 3001
+# Expose Express ports
+EXPOSE 3000
 
 # Start both Vite (frontend) and Express (backend)
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]

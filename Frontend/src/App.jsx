@@ -9,17 +9,21 @@ import { supabase } from "./RouterPage.jsx";
 
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { fetchRouteInfo } from "./components/map/Routes.jsx";
+import { data } from "react-router-dom";
 
 export const AppContext = React.createContext();
 
 async function fetchTripItinerary(token, trip_id) {
   try {
-    const response = await fetch(`/api/trips/${trip_id}/itinerary`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/trips/${trip_id}/itinerary`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     if (!response.ok) {
       return { error: `Failed to fetch itinerary for trip ${trip_id}` };
     }
@@ -46,12 +50,15 @@ export default function App() {
 
   const fetchAllTrips = async (token) => {
     try {
-      const response = await fetch("/api/trips/", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/trips/`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch trips");
       }
@@ -153,7 +160,6 @@ export default function App() {
             setIsAnnonymous,
           }}
         >
-          
           <div className="flex flex-row w-screen h-screen max-h-screen overflow-hidden">
             <SideBar />
             <div className="w-full h-full flex flex-col overflow-hidden">

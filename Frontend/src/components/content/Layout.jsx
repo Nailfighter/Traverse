@@ -15,7 +15,9 @@ export const handleDetailClick = async (
 ) => {
   try {
     const responsePlaceDetails = await fetch(
-      `/api/trips/places/${place.place_id}/details`,
+      `${import.meta.env.VITE_BACKEND_URL}/api/trips/places/${
+        place.place_id
+      }/details`,
       {
         method: "GET",
         headers: {

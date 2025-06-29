@@ -70,7 +70,9 @@ export default function AddPlaceForm({ dayNumber }) {
 
     try {
       const response = await fetch(
-        `/api/trips/${currentTrip.tripHeader.trip_id}/itinerary`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/trips/${
+          currentTrip.tripHeader.trip_id
+        }/itinerary`,
         {
           method: "POST",
           headers: {

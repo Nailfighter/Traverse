@@ -7,7 +7,7 @@ export async function getPlaceID(placeName, destination = "") {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Goog-Api-Key": process.env.VITE_GOOGLE_MAPS_API_KEY,
+        "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY,
         "X-Goog-FieldMask": "places.id",
       },
       body: JSON.stringify({ textQuery: `${placeName} ${destination}` }),
@@ -25,7 +25,7 @@ export async function getPlacePhotoAdr(placeID) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "X-Goog-Api-Key": process.env.VITE_GOOGLE_MAPS_API_KEY,
+        "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY,
         "X-Goog-FieldMask": "photos",
       },
     }
@@ -36,13 +36,13 @@ export async function getPlacePhotoAdr(placeID) {
 
 export async function getPlacePhoto(
   placeName,
-  maxHeightPx = 200,
-  maxWidthPx = 200
+  maxHeightPx = 4000,
+  maxWidthPx = 4000
 ) {
   const placeID = await getPlaceID(placeName);
   const photoPath = await getPlacePhotoAdr(placeID);
   const response = await fetch(
-    `https://places.googleapis.com/v1/${photoPath.name}/media?key=${process.env.VITE_GOOGLE_MAPS_API_KEY}&maxHeightPx=${maxHeightPx}&maxWidthPx=${maxWidthPx}`
+    `https://places.googleapis.com/v1/${photoPath.name}/media?key=${process.env.GOOGLE_MAPS_API_KEY}&maxHeightPx=${maxHeightPx}&maxWidthPx=${maxWidthPx}`
   );
   const buffer = await response.buffer();
   return buffer.toString("base64");
@@ -50,7 +50,7 @@ export async function getPlacePhoto(
 
 export async function getPlaceBanner(placeName) {
   try {
-    const img = await getPlacePhoto(placeName, 2200, 1600);
+    const img = await getPlacePhoto(placeName);
     return { image: img };
   } catch (err) {
     return { error: `Could not fetch banner for "${place}"` };
@@ -65,7 +65,7 @@ export async function getPlaceDetails(placeID) {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "X-Goog-Api-Key": process.env.VITE_GOOGLE_MAPS_API_KEY,
+          "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY,
           "X-Goog-FieldMask":
             "displayName.text,types,formattedAddress,googleMapsUri,googleMapsLinks.reviewsUri,regularOpeningHours.weekdayDescriptions,internationalPhoneNumber,rating,userRatingCount,websiteUri,postalAddress.locality,postalAddress.administrativeArea,types",
         },
@@ -84,7 +84,7 @@ export async function getPlaceDetails(placeID) {
 export async function getPlaceGeoLocation(placeID) {
   try {
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeID}&key=${process.env.VITE_GOOGLE_MAPS_API_KEY}`
+      `https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeID}&key=${process.env.GOOGLE_MAPS_API_KEY}`
     );
     if (!response.ok) throw new Error("Place geolocation fetch failed");
     const data = await response.json();

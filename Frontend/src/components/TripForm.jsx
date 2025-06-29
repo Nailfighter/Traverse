@@ -48,14 +48,17 @@ const Loader = () => {
 
 const getItinerary = async (tripDetails, accessToken) => {
   try {
-    const response = await fetch("/api/trips/generate", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(tripDetails),
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/trips/generate`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(tripDetails),
+      }
+    );
 
     const data = await response.json();
     return data;

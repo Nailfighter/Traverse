@@ -40,7 +40,9 @@ const Header = () => {
 
   const handleRenameTrip = async () => {
     const response = await fetch(
-      `/api/trips/${currentTrip.tripHeader.trip_id}`,
+      `${import.meta.env.VITE_BACKEND_URL}/api/trips/${
+        currentTrip.tripHeader.trip_id
+      }`,
       {
         method: "PATCH",
         headers: {
@@ -59,7 +61,9 @@ const Header = () => {
 
   const handleDeleteTrip = async () => {
     const response = await fetch(
-      `/api/trips/${currentTrip.tripHeader.trip_id}`,
+      `${import.meta.env.VITE_BACKEND_URL}/api/trips/${
+        currentTrip.tripHeader.trip_id
+      }`,
       {
         method: "DELETE",
         headers: {

@@ -74,7 +74,7 @@ const ContentCard = () => {
 
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden ">
-      <div className="relative flex-grow-0 w-full h-80">
+      <div className="relative flex-grow-0 w-full h-70">
         <Base64Image
           name={tripHeader?.destination}
           base64={tripHeader?.banner || ""}

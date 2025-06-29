@@ -57,17 +57,20 @@ const VisitTime = ({ place, start, end }) => {
       return;
     }
 
-    fetch(`/api/trips/places/${place.place_id}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        start_time: startTime,
-        end_time: endTime,
-      }),
-    });
+    fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/trips/places/${place.place_id}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          start_time: startTime,
+          end_time: endTime,
+        }),
+      }
+    );
   }
 
   useEffect(() => {
@@ -157,13 +160,16 @@ const PlaceCard = ({ index, place, setPlaces, showTimeInfo }) => {
   const handleDeletePlace = async (placeId, setPlaces) => {
     setPlaces((prevPlaces) => prevPlaces.filter((p) => p.place_id !== placeId));
     try {
-      const response = await fetch(`/api/trips/places/${placeId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/trips/places/${placeId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       if (!response.ok) {
         console.error("Failed to delete place");
         return;

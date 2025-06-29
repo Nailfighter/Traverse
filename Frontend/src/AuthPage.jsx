@@ -43,8 +43,7 @@ async function handleEmailLogin({
     if (isSigningUp) {
       addToast({
         title: "Sign Up Successful",
-        description:
-          "Please check your email to verify your account before signing in.",
+        description: "Please re-enter your password to login",
         color: "primary",
         duration: 5000,
       });
@@ -271,7 +270,7 @@ const AuthPage = () => {
           </div>
           <div className="w-140 flex flex-col bg-white ">
             <Logo />
-            <div className=" p-20 flex-grow-1 flex flex-col gap-8 justify-center">
+            <div className=" p-20 pt-10 flex-grow-1 flex flex-col gap-8 justify-center">
               <div className="text-center">
                 <h2 className="text-4xl font-bold">
                   {isSigningUp ? "Create Account" : "Welcome Back"}
