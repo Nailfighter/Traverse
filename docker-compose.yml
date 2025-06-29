@@ -1,17 +1,17 @@
-version: "3.8"
-
 services:
   backend:
-    build: ./Server
+    build: ./Backend
+    image: nailfighter/traverse:backend
     ports:
       - "3000:3000"
     env_file:
-      - ./Server/.env
+      - ./Backend/.env
     environment:
       SUPABASE_URL: "http://host.docker.internal:54321"
 
   frontend:
     build: ./Frontend
+    image: nailfighter/traverse:frontend
     ports:
       - "5173:5173"
     env_file:
