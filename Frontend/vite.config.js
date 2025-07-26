@@ -10,5 +10,7 @@ export default defineConfig({
   },
   server: {
     host: true,
+    allowedHosts: ["traverse.shreyansh-dev.app", "localhost"],
+    port: 5173,
   },
 });
