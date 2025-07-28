@@ -48,10 +48,12 @@ async function verifyToken(req, res) {
 
 // Generate itinerary using Gemini AI (no auth check here, add if needed)
 router.post("/generate", async (req, res) => {
+  console.log("Pre Create Trip");
   const tripCreationResponse = await createTrip(req);
   if (tripCreationResponse.error) {
     return res.status(500).json({ error: tripCreationResponse.error });
   }
+  console.log("Post Create Trip");
 
   const { destination, noOfDays, noOfTravelers, budget, notes } = req.body;
   const tripDetails = { destination, noOfDays, noOfTravelers, budget, notes };
@@ -61,21 +63,21 @@ router.post("/generate", async (req, res) => {
     const response = await askGemini(itineraryPrompt);
     const cleaned = response.text.replace(/```(?:json)?/g, "").trim();
     const generatedItinerary = JSON.parse(cleaned);
-
     await Promise.all(
       Object.keys(generatedItinerary).map((day) =>
         Promise.all(
-          generatedItinerary[day].map(async (place) => {
+          generatedItinerary[day].map(async (place, index) => {
             if (!place.name) {
-              console.warn(`Skipping place with no name in day ${day}`);
+              generatedItinerary[day].splice(index, 1);
               return;
             }
-            try {
-              place.id = await getPlaceID(place.name, destination);
-              place.image = await getPlacePhoto(place.name);
-              place.location = await getPlaceGeoLocation(place.id);
-            } catch (err) {
-              console.warn(`Failed for ${place.name}: ${err.message}`);
+
+            place.id = await getPlaceID(place.name, destination);
+            place.image = await getPlacePhoto(place.name);
+            place.location = await getPlaceGeoLocation(place.id);
+
+            if (!place.id || !place.image || !place.location) {
+              generatedItinerary[day].splice(index, 1);
             }
           })
         )

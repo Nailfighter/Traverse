@@ -5,9 +5,10 @@ dotenv.config();
 
 import tripsRoutes from "./routes/trips.js";
 import mapsRoutes from "./routes/maps.js";
+import { testSupabase } from "./helpers/supabase.js";
 
 const app = express();
-const PORT = process.env.SERVER_PORT ;
+const PORT = process.env.SERVER_PORT;
 
 app.use(cors());
 app.use(express.json());
@@ -16,6 +17,8 @@ app.use("/api/trips", tripsRoutes);
 app.use("/api/maps", mapsRoutes);
 
 app.get("/api/test", (req, res) => {
+  testSupabase();
+  console.log("test");
   res.json({
     message: "Hello from the backend!",
     serverTime: new Date().toISOString(),

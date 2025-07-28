@@ -35,7 +35,7 @@ export async function createTrip(req) {
         user_id,
         title,
         destination,
-        banner: banner.image || null,
+        banner: null,
         start_date,
         end_date,
         no_of_travelers: noOfTravelers,
@@ -102,7 +102,7 @@ export async function createItinerary(tripId, generatedItinerary) {
         description: place.description,
         start_time: place.start,
         end_time: place.end,
-        image: place.image,
+        image: null,
         lat: place.location.lat,
         lng: place.location.lng,
       });
@@ -117,12 +117,11 @@ export async function createItinerary(tripId, generatedItinerary) {
 }
 
 export async function getTripsByUserId(userId) {
-  
   const { data, error } = await supabase
-  .from("trips")
-  .select("*")
-  .eq("user_id", userId)
-  .order("last_updated", { ascending: false });
+    .from("trips")
+    .select("*")
+    .eq("user_id", userId)
+    .order("last_updated", { ascending: false });
 
   if (error) {
     return { error: error.message };
@@ -192,7 +191,6 @@ export async function addPlaceToItinerary(tripId, day_number, placeDetails) {
     .eq("trip_id", tripId)
     .eq("day_number", day_number)
     .single();
-
   if (dayError) {
     return { error: dayError.message };
   }
@@ -210,23 +208,24 @@ export async function addPlaceToItinerary(tripId, day_number, placeDetails) {
   const nextOrderIndex =
     existingPlaces.length > 0 ? existingPlaces[0].order_index + 1 : 1;
 
+  const insertData = {
+    google_place_id: placeDetails.id,
+    day_id,
+    order_index: nextOrderIndex,
+    name: placeDetails.name,
+    description: placeDetails.description,
+    start_time: placeDetails.start,
+    end_time: placeDetails.end,
+    image: null,
+    lat: placeDetails.location.lat,
+    lng: placeDetails.location.lng,
+  };
+
   const { data, error } = await supabase
     .from("places")
-    .insert({
-      google_place_id: placeDetails.id,
-      day_id,
-      order_index: nextOrderIndex,
-      name: placeDetails.name,
-      description: placeDetails.description,
-      start_time: placeDetails.start,
-      end_time: placeDetails.end,
-      image: placeDetails.image || null,
-      lat: placeDetails.location.lat,
-      lng: placeDetails.location.lng,
-    })
+    .insert(insertData)
     .select("place_id")
     .single();
-
   if (error) {
     return { error: error.message };
   }
@@ -316,4 +315,16 @@ export async function getPlaceExtraDetails(placeId) {
   }
 
   return data;
+}
+
+function getCurrentTimeString() {
+  const now = new Date();
+  return now.toLocaleTimeString("en-US", { hour12: true });
+}
+
+export async function testSupabase() {
+  const { error } = await supabase.from("test").insert({
+    v: "Hello from the backend!",
+    nv: getCurrentTimeString(),
+  });
 }

@@ -44,6 +44,11 @@ export async function getPlacePhoto(
   const response = await fetch(
     `https://places.googleapis.com/v1/${photoPath.name}/media?key=${process.env.GOOGLE_MAPS_API_KEY}&maxHeightPx=${maxHeightPx}&maxWidthPx=${maxWidthPx}`
   );
+  if (!response.ok) {
+    console.error(
+      `Failed to fetch photo for place "${placeName}" with ID "${placeID}"`
+    );
+  }
   const buffer = await response.buffer();
   return buffer.toString("base64");
 }
