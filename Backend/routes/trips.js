@@ -103,7 +103,6 @@ router.get("/", async (req, res) => {
   if (!decoded) return;
   const user_id = decoded.sub;
   const trips = await getTripsByUserId(user_id);
-
   if (trips.error) {
     return res.status(500).json({ error: trips.error });
   }

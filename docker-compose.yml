@@ -1,21 +1,19 @@
 services:
   backend:
-    build: ./Backend
     image: nailfighter/traverse:backend
     ports:
-      - "3000:3000"
+      - "3000:3000"   # expose backend port for nginx proxy
     env_file:
       - ./Backend/.env
     environment:
-      SUPABASE_URL: "https://traverse.shreyansh-dev.app/supabase"
+      SUPABASE_URL: "http://host.docker.internal:54321"
 
   frontend:
-    build: ./Frontend
     image: nailfighter/traverse:frontend
     ports:
-      - "5173:5173"
+      - "5173:5173"   # expose frontend port for nginx proxy
     env_file:
       - ./Frontend/.env
     environment:
-      VITE_BACKEND_URL: "http://localhost:3000"
-      VITE_SUPABASE_URL: "https://traverse.shreyansh-dev.app/supabase"
+      VITE_BACKEND_URL: "http://host.docker.internal:3000"
+      VITE_SUPABASE_URL: "http://host.docker.internal:54321"

@@ -122,7 +122,11 @@ export async function getTripsByUserId(userId) {
     .select("*")
     .eq("user_id", userId)
     .order("last_updated", { ascending: false });
+<<<<<<< Updated upstream
 
+=======
+  console.log("getTripsByUserId", data, error);
+>>>>>>> Stashed changes
   if (error) {
     return { error: error.message };
   }
@@ -327,4 +331,11 @@ export async function testSupabase() {
     v: "Hello from the backend!",
     nv: getCurrentTimeString(),
   });
+<<<<<<< Updated upstream
+=======
+  if (error) {
+    console.error("Supabase test error:", error);
+    return { error: error.message };
+  }
+>>>>>>> Stashed changes
 }
