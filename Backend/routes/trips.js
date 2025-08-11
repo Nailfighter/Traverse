@@ -8,7 +8,7 @@ import {
 } from "../helpers/gemini.js";
 import {
   getPlaceID,
-  getPlacePhoto,
+  getPlacePhotoStream,
   getPlaceDetails,
   getPlaceGeoLocation,
 } from "../helpers/googleMaps.js";
@@ -25,6 +25,7 @@ import {
   getGooglePlaceID,
   getImageByPlaceId,
   deletePlaceFromItinerary,
+  uploadImageStreamToStorage,
 } from "../helpers/supabase.js";
 
 const router = express.Router();
@@ -48,12 +49,10 @@ async function verifyToken(req, res) {
 
 // Generate itinerary using Gemini AI (no auth check here, add if needed)
 router.post("/generate", async (req, res) => {
-  console.log("Pre Create Trip");
   const tripCreationResponse = await createTrip(req);
   if (tripCreationResponse.error) {
     return res.status(500).json({ error: tripCreationResponse.error });
   }
-  console.log("Post Create Trip");
 
   const { destination, noOfDays, noOfTravelers, budget, notes } = req.body;
   const tripDetails = { destination, noOfDays, noOfTravelers, budget, notes };
@@ -63,6 +62,7 @@ router.post("/generate", async (req, res) => {
     const response = await askGemini(itineraryPrompt);
     const cleaned = response.text.replace(/```(?:json)?/g, "").trim();
     const generatedItinerary = JSON.parse(cleaned);
+
     await Promise.all(
       Object.keys(generatedItinerary).map((day) =>
         Promise.all(
@@ -73,10 +73,43 @@ router.post("/generate", async (req, res) => {
             }
 
             place.id = await getPlaceID(place.name, destination);
-            place.image = await getPlacePhoto(place.name);
+
+            try {
+              const imageResult = await getPlacePhotoStream(
+                place.name,
+                400,
+                300
+              );
+              if (imageResult && !imageResult.error) {
+                // Generate unique filename for place image
+                const timestamp = Date.now();
+                const sanitizedName = place.name
+                  .replace(/[^a-zA-Z0-9]/g, "_")
+                  .substring(0, 30);
+                const fileName = `place_${sanitizedName}_${timestamp}.jpg`;
+
+                // Upload to storage
+                const uploadResult = await uploadImageStreamToStorage(
+                  imageResult,
+                  fileName,
+                  "image/jpeg"
+                );
+
+                place.image = uploadResult.url;
+              } else {
+                place.image = null;
+              }
+            } catch (imageError) {
+              console.error(
+                `Failed to upload image for ${place.name}:`,
+                imageError.message
+              );
+              place.image = null;
+            }
+
             place.location = await getPlaceGeoLocation(place.id);
 
-            if (!place.id || !place.image || !place.location) {
+            if (!place.id || !place.location) {
               generatedItinerary[day].splice(index, 1);
             }
           })
@@ -171,7 +204,36 @@ router.post("/:trip_id/itinerary", async (req, res) => {
     const generatedPlace = JSON.parse(cleaned);
 
     generatedPlace[0].id = await getPlaceID(place_name, destination);
-    generatedPlace[0].image = await getPlacePhoto(place_name);
+
+    try {
+      const imageResult = await getPlacePhotoStream(place_name, 400, 300);
+      if (imageResult && !imageResult.error) {
+        // Generate unique filename for place image
+        const timestamp = Date.now();
+        const sanitizedName = place_name
+          .replace(/[^a-zA-Z0-9]/g, "_")
+          .substring(0, 30);
+        const fileName = `place_${sanitizedName}_${timestamp}.jpg`;
+
+        // Upload to storage
+        const uploadResult = await uploadImageStreamToStorage(
+          imageResult,
+          fileName,
+          "image/jpeg"
+        );
+
+        generatedPlace[0].image = uploadResult.url;
+      } else {
+        generatedPlace[0].image = null;
+      }
+    } catch (imageError) {
+      console.error(
+        `Failed to upload image for ${place_name}:`,
+        imageError.message
+      );
+      generatedPlace[0].image = null;
+    }
+
     generatedPlace[0].location = await getPlaceGeoLocation(
       generatedPlace[0].id
     );

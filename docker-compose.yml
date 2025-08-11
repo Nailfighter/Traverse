@@ -6,7 +6,7 @@ services:
     env_file:
       - ./Backend/.env
     environment:
-      SUPABASE_URL: "http://host.docker.internal:54321"
+      SUPABASE_URL: "https://traverse.shreyansh-dev.app/supabase"
 
   frontend:
     image: nailfighter/traverse:frontend
@@ -15,5 +15,5 @@ services:
     env_file:
       - ./Frontend/.env
     environment:
-      VITE_BACKEND_URL: "http://host.docker.internal:3000"
-      VITE_SUPABASE_URL: "http://host.docker.internal:54321"
+      VITE_BACKEND_URL: "http://localhost:3000"
+      VITE_SUPABASE_URL: "https://traverse.shreyansh-dev.app/supabase"

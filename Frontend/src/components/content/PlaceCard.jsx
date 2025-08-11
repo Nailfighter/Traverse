@@ -12,12 +12,12 @@ import TimeSetter from "./TimeSetter.jsx";
 import { AppContext } from "../../App.jsx";
 import { handleDetailClick, ExtraInfoContext } from "./Layout.jsx";
 
-const Base64Image = ({ name, base64 }) => {
+const ImageComponent = ({ name, imageData }) => {
   return (
     <img
       alt={name}
       className="w-28 aspect-square object-cover rounded-2xl shrink-0"
-      src={base64 ? `data:image/jpeg;base64,${base64}` : null}
+      src={imageData}
     />
   );
 };
@@ -217,8 +217,7 @@ const PlaceCard = ({ index, place, setPlaces, showTimeInfo }) => {
           </div>
           <VisitTime start={place.start} end={place.end} place={place} />
         </div>
-
-        <Base64Image name={place.name} base64={place.image} />
+        <ImageComponent name={place.name} imageData={place?.image || ""} />
       </div>
 
       <div className="absolute top-[-10px] left-[-10px] rounded-full bg-gray-800 h-6 w-6 text-[12px] font-semibold text-white flex items-center justify-center">

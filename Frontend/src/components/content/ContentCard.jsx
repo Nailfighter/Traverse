@@ -6,13 +6,9 @@ import Itinerary from "./Itinerary.jsx";
 import { AppContext } from "../../App.jsx";
 import { Tabs, Tab, ToastProvider } from "@heroui/react";
 
-const Base64Image = ({ name, base64 }) => {
+const ImageComponent = ({ name, imageData }) => {
   return (
-    <img
-      className="w-full h-full object-cover"
-      alt={name}
-      src={base64 ? `data:image/jpeg;base64,${base64}` : null}
-    />
+    <img className="w-full h-full object-cover" alt={name} src={imageData} />
   );
 };
 
@@ -75,10 +71,9 @@ const ContentCard = () => {
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden ">
       <div className="relative flex-grow-0 w-full h-70">
-        <Base64Image
+        <ImageComponent
           name={tripHeader?.destination}
-          base64={tripHeader?.banner || ""}
-          a
+          imageData={tripHeader?.banner || ""}
         />
         <div className="absolute top-0 left-0 w-full h-full bg-black opacity-40"></div>
         <div className="absolute bottom-0 w-full text-white font-bold text-4xl p-4">

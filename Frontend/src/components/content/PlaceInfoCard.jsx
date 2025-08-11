@@ -23,12 +23,12 @@ import { HourglassIcon } from "lucide-react";
 
 import { ExtraInfoContext } from "./Layout";
 
-const Base64Image = ({ name, base64 }) => {
+const ImageComponent = ({ name, imageData }) => {
   return (
     <img
       className="h-50 w-full object-cover rounded-xl"
       alt={name}
-      src={base64 ? `data:image/jpeg;base64,${base64}` : null}
+      src={imageData}
     />
   );
 };
@@ -184,9 +184,9 @@ const PlaceInfoCard = () => {
             {isMinimised && (
               <>
                 <div className="grid grid-cols-2 gap-2">
-                  <Base64Image
+                  <ImageComponent
                     name={placeDetails.name}
-                    base64={placeDetails.image}
+                    imageData={placeDetails?.image || ""}
                   />
                 </div>
 

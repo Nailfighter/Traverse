@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { Readable } from "stream";
 
 export async function getPlaceID(placeName, destination = "") {
   const response = await fetch(
@@ -34,31 +35,55 @@ export async function getPlacePhotoAdr(placeID) {
   return data.photos?.[0];
 }
 
-export async function getPlacePhoto(
+export async function getPlacePhotoStream(
   placeName,
   maxHeightPx = 4000,
   maxWidthPx = 4000
 ) {
-  const placeID = await getPlaceID(placeName);
-  const photoPath = await getPlacePhotoAdr(placeID);
-  const response = await fetch(
-    `https://places.googleapis.com/v1/${photoPath.name}/media?key=${process.env.GOOGLE_MAPS_API_KEY}&maxHeightPx=${maxHeightPx}&maxWidthPx=${maxWidthPx}`
-  );
-  if (!response.ok) {
-    console.error(
-      `Failed to fetch photo for place "${placeName}" with ID "${placeID}"`
+  try {
+    const placeID = await getPlaceID(placeName);
+    if (!placeID) {
+      throw new Error(`Could not find place ID for "${placeName}"`);
+    }
+
+    const photoPath = await getPlacePhotoAdr(placeID);
+    if (!photoPath) {
+      throw new Error(`No photos found for place "${placeName}"`);
+    }
+
+    const response = await fetch(
+      `https://places.googleapis.com/v1/${photoPath.name}/media?key=${process.env.GOOGLE_MAPS_API_KEY}&maxHeightPx=${maxHeightPx}&maxWidthPx=${maxWidthPx}`
     );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch photo for place "${placeName}" with ID "${placeID}"`
+      );
+    }
+
+    return response.body;
+  } catch (error) {
+    console.error(`Error in getPlacePhotoStream: ${error.message}`);
+    throw error;
   }
-  const buffer = await response.buffer();
-  return buffer.toString("base64");
 }
 
-export async function getPlaceBanner(placeName) {
+export async function getPlaceBannerStream(
+  placeName,
+  maxHeightPx = 320,
+  maxWidthPx = 210
+) {
   try {
-    const img = await getPlacePhoto(placeName);
-    return { image: img };
+    const stream = await getPlacePhotoStream(
+      placeName,
+      maxHeightPx,
+      maxWidthPx
+    );
+    return { stream, contentType: "image/jpeg" };
   } catch (err) {
-    return { error: `Could not fetch banner for "${place}"` };
+    return {
+      error: `Could not fetch banner for "${placeName}": ${err.message}`,
+    };
   }
 }
 

@@ -9,12 +9,12 @@ import TripForm from "./TripForm";
 import { AppContext } from "../App";
 import { supabase } from "../RouterPage";
 
-const Base64Image = ({ name, base64 }) => {
+const ImageComponent = ({ name, imageData }) => {
   return (
     <img
       className="h-full w-full object-cover rounded-lg"
       alt={name}
-      src={base64 ? `data:image/jpeg;base64,${base64}` : undefined}
+      src={imageData}
     />
   );
 };
@@ -45,7 +45,7 @@ const TripBox = ({
           className="w-full h-full border-3 border-white rounded-xl hover:cursor-pointer"
           onClick={onClick}
         >
-          <Base64Image name={trip.destination} base64={trip.banner} />
+          <ImageComponent name={trip.destination} imageData={trip?.banner || ""} />
         </button>
       </div>
 

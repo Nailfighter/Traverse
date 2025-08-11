@@ -1,12 +1,52 @@
 import jwt from "jsonwebtoken";
-import { getPlaceBanner } from "../helpers/googleMaps.js";
+import { getPlaceBannerStream } from "../helpers/googleMaps.js";
 
 import { createClient } from "@supabase/supabase-js";
-import e from "express";
+import dotenv from "dotenv";
+
+dotenv.config();
+
 export const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
+
+export async function uploadImageStreamToStorage(
+  stream,
+  fileName,
+  contentType = "image/jpeg"
+) {
+  try {
+    const chunks = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+
+    const buffer = Buffer.concat(chunks);
+
+    const { data, error } = await supabase.storage
+      .from("trip-banners")
+      .upload(fileName, buffer, {
+        contentType: contentType,
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Storage upload error:", error);
+      throw new Error(`Storage upload failed: ${error.message}`);
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("trip-banners")
+      .getPublicUrl(fileName);
+
+    return { url: urlData.publicUrl, path: data.path };
+  } catch (error) {
+    console.error("Error in uploadImageStreamToStorage:", error);
+    throw error;
+  }
+}
 
 export async function createTrip(req) {
   const authHeader = req.headers["authorization"];
@@ -27,7 +67,34 @@ export async function createTrip(req) {
       budget,
       notes,
     } = req.body;
-    const banner = await getPlaceBanner(destination);
+
+    const bannerResult = await getPlaceBannerStream(destination, 1900, 1200);
+
+    let bannerUrl = null;
+    if (!bannerResult.error && bannerResult.stream) {
+      try {
+        // Generate unique filename
+        const timestamp = Date.now();
+        const sanitizedDestination = destination
+          .replace(/[^a-zA-Z0-9]/g, "_")
+          .substring(0, 50);
+        const fileName = `banner_${user_id}_${sanitizedDestination}_${timestamp}.jpg`;
+
+        // Upload stream to storage
+        const uploadResult = await uploadImageStreamToStorage(
+          bannerResult.stream,
+          fileName,
+          bannerResult.contentType
+        );
+
+        bannerUrl = uploadResult.url;
+        console.log("Banner uploaded successfully:", bannerUrl);
+      } catch (uploadError) {
+        console.error("Banner upload failed:", uploadError.message);
+      }
+    } else {
+      console.error("Banner fetch failed:", bannerResult.error);
+    }
 
     const { data, error } = await supabase
       .from("trips")
@@ -35,7 +102,7 @@ export async function createTrip(req) {
         user_id,
         title,
         destination,
-        banner: null,
+        banner: bannerUrl,
         start_date,
         end_date,
         no_of_travelers: noOfTravelers,
@@ -102,7 +169,7 @@ export async function createItinerary(tripId, generatedItinerary) {
         description: place.description,
         start_time: place.start,
         end_time: place.end,
-        image: null,
+        image: place.image,
         lat: place.location.lat,
         lng: place.location.lng,
       });
@@ -122,11 +189,7 @@ export async function getTripsByUserId(userId) {
     .select("*")
     .eq("user_id", userId)
     .order("last_updated", { ascending: false });
-<<<<<<< Updated upstream
 
-=======
-  console.log("getTripsByUserId", data, error);
->>>>>>> Stashed changes
   if (error) {
     return { error: error.message };
   }
@@ -220,7 +283,7 @@ export async function addPlaceToItinerary(tripId, day_number, placeDetails) {
     description: placeDetails.description,
     start_time: placeDetails.start,
     end_time: placeDetails.end,
-    image: null,
+    image: placeDetails.image,
     lat: placeDetails.location.lat,
     lng: placeDetails.location.lng,
   };
@@ -331,11 +394,8 @@ export async function testSupabase() {
     v: "Hello from the backend!",
     nv: getCurrentTimeString(),
   });
-<<<<<<< Updated upstream
-=======
   if (error) {
     console.error("Supabase test error:", error);
     return { error: error.message };
   }
->>>>>>> Stashed changes
 }
