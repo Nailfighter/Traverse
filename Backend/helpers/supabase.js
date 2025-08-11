@@ -41,7 +41,7 @@ export async function uploadImageStreamToStorage(
       .from("trip-banners")
       .getPublicUrl(fileName);
 
-    return { url: urlData.publicUrl, path: data.path };
+    return { path: data.fullPath };
   } catch (error) {
     console.error("Error in uploadImageStreamToStorage:", error);
     throw error;
@@ -87,7 +87,10 @@ export async function createTrip(req) {
           bannerResult.contentType
         );
 
-        bannerUrl = uploadResult.url;
+        bannerUrl =
+          process.env.PUBLIC_SUPABASE_URL +
+          "/storage/v1/object/public/" +
+          uploadResult.path;
         console.log("Banner uploaded successfully:", bannerUrl);
       } catch (uploadError) {
         console.error("Banner upload failed:", uploadError.message);

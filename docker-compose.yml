@@ -15,5 +15,5 @@ services:
     env_file:
       - ./Frontend/.env
     environment:
-      VITE_BACKEND_URL: "http://localhost:3000"
+      VITE_BACKEND_URL: "https://traverse.shreyansh-dev.app/api"
       VITE_SUPABASE_URL: "https://traverse.shreyansh-dev.app/supabase"

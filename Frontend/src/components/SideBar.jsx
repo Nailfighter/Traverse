@@ -45,7 +45,10 @@ const TripBox = ({
           className="w-full h-full border-3 border-white rounded-xl hover:cursor-pointer"
           onClick={onClick}
         >
-          <ImageComponent name={trip.destination} imageData={trip?.banner || ""} />
+          <ImageComponent
+            name={trip.destination}
+            imageData={trip?.banner || ""}
+          />
         </button>
       </div>
 

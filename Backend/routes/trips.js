@@ -95,7 +95,10 @@ router.post("/generate", async (req, res) => {
                   "image/jpeg"
                 );
 
-                place.image = uploadResult.url;
+                place.image =
+                  process.env.PUBLIC_SUPABASE_URL +
+                  "/storage/v1/object/public/" +
+                  uploadResult.path;
               } else {
                 place.image = null;
               }
@@ -222,7 +225,10 @@ router.post("/:trip_id/itinerary", async (req, res) => {
           "image/jpeg"
         );
 
-        generatedPlace[0].image = uploadResult.url;
+        generatedPlace[0].image =
+          process.env.PUBLIC_SUPABASE_URL +
+          "/storage/v1/object/public/" +
+          uploadResult.path;
       } else {
         generatedPlace[0].image = null;
       }

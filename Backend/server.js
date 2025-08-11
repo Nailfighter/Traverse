@@ -20,7 +20,7 @@ app.get("/api/test", (req, res) => {
   testSupabase();
   console.log("test");
   res.json({
-    message: "Hello from the backend!",
+    message: "Hello from the backend v2!",
     serverTime: new Date().toISOString(),
   });
 });
