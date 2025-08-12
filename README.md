@@ -1,40 +1,48 @@
 <p align="center">
-  <img src="Frontend/public/TraverseIcon.svg" height="300px">
+  <img src="Screenshots/Main.png" width="750px">
 </p>
 
 <h1 align="center">
-  Traverse
+  Traverse - AI Itinerary Planner
   <br>
 </h1>
 
-<h4 align="center">An AI-Powered Travel Itinerary Planner built with <a href="https://reactjs.org" target="_blank">React</a> and <a href="https://nodejs.org" target="_blank">Node.js</a>.</h4>
-
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com/)
-[![Google Maps](https://img.shields.io/badge/Google_Maps-4285F4?style=for-the-badge&logo=google-maps&logoColor=white)](https://developers.google.com/maps)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+<h4 align="center">An AI-powered platform that creates personalized travel itineraries to simplify and enhance the way users plan their trips.</h4>
 
 <p align="center">
-  <a href="#-features">Features</a> •
-  <a href="#️-architecture">Architecture</a> •
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-project-structure">Project Structure</a> •
-  <a href="#-api-endpoints">API Endpoints</a> •
-  <a href="#-technologies-used">Technologies Used</a> •
-  <a href="#-license">License</a>
+  <a href="https://reactjs.org/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  </a>
+  <a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
+  </a>
+  <a href="https://expressjs.com/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+  </a>
+  <a href="https://tailwindcss.com/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  </a>
+  <a href="https://supabase.com/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+  </a>
+  <a href="https://docker.com/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  </a>
+  <a href="https://developers.google.com/maps" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Google_Maps-4285F4?style=for-the-badge&logo=google-maps&logoColor=white" alt="Google Maps" />
+  </a>
 </p>
+
 
 ## What is Traverse ?
 
-Traverse is a full-stack web application that helps users create personalized travel itineraries using AI. The application combines Google Maps integration, AI-powered itinerary generation, and a modern React frontend to provide a seamless travel planning experience.
+Traverse is a digital platform that enhances travel planning by creating personalized, AI-driven itineraries tailored to your interests, budget, and travel style. Seamlessly integrated with Google Maps for real-time navigation and route optimization, Traverse simplifies the planning process for trips.
+
+By offering intelligent recommendations and easy itinerary management, it reduces the complexity of travel planning, helping users focus on enjoying their journey.
 
 ## Demo
 
-Try it at [traverse.shreyanshsahu.co](https://traverse.shreyanshsahu.co)
+Try it at [traverse.shreyansh-dev.app](https://traverse.shreyansh-dev.app/login)
 
 ## Features
 
@@ -104,6 +112,7 @@ The project follows a microservices architecture with three main components:
    JWT_SECRET=your_jwt_secret
    GOOGLE_MAPS_API_KEY=your_google_maps_api_key
    GEMINI_API_KEY=your_gemini_api_key
+   PUBLIC_SUPABASE_URL=your_supabase_url
    SUPABASE_URL=your_supabase_url
    SUPABASE_ANON_KEY=your_supabase_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
@@ -207,7 +216,7 @@ Traverse/
 - `GET /api/maps/route` - Get route information between locations
 - `GET /api/maps/places` - Search for places
 
-## 🗄️ Database Schema
+## Database Schema
 
 The application uses three main tables:
 
@@ -241,7 +250,3 @@ The application uses three main tables:
 
 - **Docker** - Containerization
 - **Docker Compose** - Multi-container orchestration
-
-## License
-
-This project is licensed under the ISC License - see the LICENSE file for details.
