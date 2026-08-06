@@ -103,28 +103,24 @@ The project follows a microservices architecture with three main components:
 
 2. **Set up environment variables**
 
-   Create `.env` files in both `Backend/` and `Frontend/` directories:
-
-   **Backend/.env:**
+   Create a single `.env` file at the repo root, shared by both `Backend/` and `Frontend/`:
 
    ```env
-   SERVER_PORT=3000
+   # Backend
+   SUPABASE_URL=your_supabase_url          # used server-side by the Express API
+   SUPABASE_KEY=your_supabase_anon_key
    JWT_SECRET=your_jwt_secret
    GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+   GOOGLE_MAPS_MAP_ID=your_google_maps_map_id
+   SERVER_PORT=3000
    GEMINI_API_KEY=your_gemini_api_key
-   PUBLIC_SUPABASE_URL=your_supabase_url
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-   ```
 
-   **Frontend/.env:**
-
-   ```env
-   VITE_BACKEND_URL=http://localhost:3000
+   # Frontend (Vite inlines VITE_* vars at build time)
    VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_SUPABASE_KEY=your_supabase_anon_key
+   VITE_BACKEND_URL=http://localhost:3000
    VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+   VITE_GOOGLE_MAPS_MAP_ID=your_google_maps_map_id
    ```
 
 3. **Set up Supabase Database**
@@ -140,14 +136,13 @@ The project follows a microservices architecture with three main components:
 
 ### Running with Docker (Recommended)
 
-```bash
-# Build and start all services
-docker-compose up --build
+Run from the repo root so the shared `.env` is picked up:
 
-# Access the application
-# Frontend: http://localhost:5173
-# Backend: http://localhost:3000
+```bash
+docker compose --env-file .env -f Docker/docker-compose.yml up --build
 ```
+
+The frontend and backend containers join a shared external Docker network (`traefik_net`); routing/TLS is handled by an external reverse proxy rather than published ports. Create the network first if it doesn't already exist: `docker network create traefik_net`.
 
 ### Local Development
 
@@ -198,7 +193,14 @@ Traverse/
 ├── Supabase/               # Database configuration
 │   └── supabase/
 │       └── migrations/     # Database schema
-└── docker-compose.yml      # Docker configuration
+├── Docker/                 # Docker configuration
+│   ├── Backend/Dockerfile
+│   ├── Frontend/Dockerfile
+│   ├── Frontend/nginx.conf
+│   └── docker-compose.yml
+├── .github/workflows/
+│   └── deploy.yml          # Self-hosted CI/CD deploy workflow
+└── .env                    # Shared env vars for Backend + Frontend
 ```
 
 ## API Endpoints

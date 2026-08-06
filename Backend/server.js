@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 import tripsRoutes from "./routes/trips.js";
 import mapsRoutes from "./routes/maps.js";

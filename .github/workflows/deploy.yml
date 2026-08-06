@@ -1,0 +1,19 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write .env
+        run: printf '%s\n' "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Deploy with Docker Compose
+        working-directory: Docker
+        run: docker compose --env-file ../.env up -d --build

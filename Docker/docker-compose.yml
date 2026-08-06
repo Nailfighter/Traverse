@@ -1,0 +1,38 @@
+name: traverse
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: Docker/Backend/Dockerfile
+    container_name: traverse-backend
+    restart: always
+    environment:
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_KEY: ${SUPABASE_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID}
+      SERVER_PORT: ${SERVER_PORT:-3000}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    networks:
+      - traefik_net
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: Docker/Frontend/Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_KEY: ${VITE_SUPABASE_KEY}
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY}
+        VITE_GOOGLE_MAPS_MAP_ID: ${VITE_GOOGLE_MAPS_MAP_ID}
+    container_name: traverse-frontend
+    restart: always
+    networks:
+      - traefik_net
+
+networks:
+  traefik_net:
+    external: true
