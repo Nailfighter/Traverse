@@ -128,6 +128,34 @@ services:
     networks:
       - supabase_internal
 
+  supabase-storage:
+    image: supabase/storage-api:v1.60.4
+    container_name: traverse-supabase-storage
+    restart: always
+    profiles: [self-hosted]
+    depends_on:
+      - supabase-db
+      - supabase-rest
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://supabase-rest:3000
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@supabase-db:5432/postgres
+      STORAGE_PUBLIC_URL: ${SUPABASE_URL}
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: local
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: local
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+    networks:
+      - supabase_internal
+
   supabase-kong:
     image: kong/kong:3.9.3
     container_name: traverse-supabase-kong
@@ -136,6 +164,7 @@ services:
     depends_on:
       - supabase-auth
       - supabase-rest
+      - supabase-storage
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
@@ -155,6 +184,7 @@ services:
 
 volumes:
   supabase-db-data:
+  supabase-storage-data:
 
 networks:
   traefik_net:

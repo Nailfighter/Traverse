@@ -58,3 +58,17 @@ services:
         config:
           hide_groups_header: true
           allow: [anon, admin]
+
+  # No key-auth here, unlike auth-v1/rest-v1 above: Storage handles authorization
+  # itself (public-bucket objects must be fetchable by a plain <img> tag with no
+  # apikey header at all; private-bucket access relies on whatever Authorization
+  # header the client already sends, which passes through untouched).
+  - name: storage-v1
+    url: http://supabase-storage:5000/
+    routes:
+      - name: storage-v1-all
+        strip_path: true
+        paths:
+          - /storage/v1/
+    plugins:
+      - name: cors
