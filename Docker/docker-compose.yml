@@ -118,6 +118,7 @@ services:
       - supabase-meta
       - supabase-kong
     environment:
+      HOSTNAME: "0.0.0.0"
       STUDIO_PG_META_URL: http://supabase-meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       SUPABASE_URL: http://supabase-kong:8000
