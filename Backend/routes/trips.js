@@ -127,6 +127,7 @@ router.post("/generate", async (req, res) => {
 
     res.json(itineraryCreationResponse);
   } catch (err) {
+    console.error("Itinerary generation failed:", err);
     res
       .status(500)
       .json({ error: "Itinerary generation failed", message: err.message });
@@ -255,6 +256,7 @@ router.post("/:trip_id/itinerary", async (req, res) => {
 
     res.json(responseAddPlace);
   } catch (err) {
+    console.error("Place generation failed:", err);
     return res
       .status(500)
       .json({ error: "Place generation failed", message: err.message });

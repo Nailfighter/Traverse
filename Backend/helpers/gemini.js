@@ -61,7 +61,7 @@ Ensure the result is valid JSON with no extra commentary or explanations
 
 export async function askGemini(prompt) {
   return ai.models.generateContent({
-    model: "gemini-2.0-flash-lite",
+    model: "gemini-flash-lite-latest",
     contents: prompt,
     config: {
       temperature: 0.1,
