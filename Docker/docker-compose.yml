@@ -9,7 +9,7 @@ services:
     restart: always
     environment:
       SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_KEY: ${SUPABASE_KEY}
+      ANON_KEY: ${ANON_KEY}
       JWT_SECRET: ${JWT_SECRET}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID}
@@ -33,6 +33,123 @@ services:
     networks:
       - traefik_net
 
+  supabase-db:
+    image: supabase/postgres:17.6.1.136
+    container_name: traverse-supabase-db
+    restart: always
+    profiles: [self-hosted]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: 3600
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./Supabase/Initial_Schema.sql:/docker-entrypoint-initdb.d/99-initial-schema.sql:ro
+    networks:
+      - supabase_internal
+
+  supabase-auth:
+    image: supabase/gotrue:v2.189.0
+    container_name: traverse-supabase-auth
+    restart: always
+    profiles: [self-hosted]
+    depends_on:
+      - supabase-db
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@supabase-db:5432/postgres
+      GOTRUE_SITE_URL: ${SITE_URL}
+      GOTRUE_URI_ALLOW_LIST: ${SITE_URL}
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+    networks:
+      - supabase_internal
+
+  supabase-rest:
+    image: postgrest/postgrest:v14.12
+    container_name: traverse-supabase-rest
+    restart: always
+    profiles: [self-hosted]
+    depends_on:
+      - supabase-db
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+    networks:
+      - supabase_internal
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.96.6
+    container_name: traverse-supabase-meta
+    restart: always
+    profiles: [self-hosted]
+    depends_on:
+      - supabase-db
+    environment:
+      PG_META_DB_HOST: supabase-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - supabase_internal
+
+  supabase-studio:
+    image: supabase/studio:2026.08.03-sha-022b374
+    container_name: traverse-supabase-studio
+    restart: always
+    profiles: [self-hosted]
+    depends_on:
+      - supabase-meta
+      - supabase-kong
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    networks:
+      - supabase_internal
+
+  supabase-kong:
+    image: kong/kong:3.9.3
+    container_name: traverse-supabase-kong
+    restart: always
+    profiles: [self-hosted]
+    depends_on:
+      - supabase-auth
+      - supabase-rest
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ./Supabase/kong.yml:/home/kong/temp.yml:ro
+    entrypoint: >
+      bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    networks:
+      - traefik_net
+      - supabase_internal
+
+volumes:
+  supabase-db-data:
+
 networks:
   traefik_net:
     external: true
+  supabase_internal:
+    internal: true

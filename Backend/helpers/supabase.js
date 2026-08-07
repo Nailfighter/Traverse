@@ -8,7 +8,7 @@ dotenv.config();
 
 export const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+  process.env.ANON_KEY
 );
 
 export async function uploadImageStreamToStorage(

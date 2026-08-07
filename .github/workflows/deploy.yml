@@ -16,4 +16,4 @@ jobs:
 
       - name: Deploy with Docker Compose
         working-directory: Docker
-        run: docker compose --env-file ../.env up -d --build
+        run: docker compose --env-file ../.env --profile self-hosted up -d --build
