@@ -45,7 +45,14 @@ services:
       JWT_EXP: 3600
     volumes:
       - supabase-db-data:/var/lib/postgresql/data
-      - ./Supabase/Initial_Schema.sql:/docker-entrypoint-initdb.d/99-initial-schema.sql:ro
+      - ./Supabase/sql/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:ro
+      - ./Supabase/sql/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./Supabase/sql/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - ./Supabase/sql/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
+      - ./Supabase/sql/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:ro
+      - ./Supabase/sql/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:ro
+      - ./Supabase/sql/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ./Supabase/sql/Initial_Schema.sql:/docker-entrypoint-initdb.d/migrations/99-zz-app-schema.sql:ro
     networks:
       - supabase_internal
 
@@ -130,7 +137,7 @@ services:
       - supabase-rest
     environment:
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
       KONG_DNS_ORDER: LAST,A,CNAME
       KONG_PLUGINS: request-transformer,cors,key-auth,acl
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
@@ -138,9 +145,9 @@ services:
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
     volumes:
-      - ./Supabase/kong.yml:/home/kong/temp.yml:ro
+      - ./Supabase/kong.yml:/tmp/temp.yml:ro
     entrypoint: >
-      bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+      bash -c 'eval "echo \"$$(cat /tmp/temp.yml)\"" > /tmp/kong.yml && /docker-entrypoint.sh kong docker-start'
     networks:
       - traefik_net
       - supabase_internal
