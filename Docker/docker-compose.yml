@@ -147,7 +147,7 @@ services:
     volumes:
       - ./Supabase/kong.yml:/tmp/temp.yml:ro
     entrypoint: >
-      bash -c 'eval "echo \"$$(cat /tmp/temp.yml)\"" > /tmp/kong.yml && /docker-entrypoint.sh kong docker-start'
+      bash -c 'sed -e "s|\$${SUPABASE_ANON_KEY}|$$SUPABASE_ANON_KEY|g" -e "s|\$${SUPABASE_SERVICE_KEY}|$$SUPABASE_SERVICE_KEY|g" /tmp/temp.yml > /tmp/kong.yml && /entrypoint.sh kong docker-start'
     networks:
       - traefik_net
       - supabase_internal
