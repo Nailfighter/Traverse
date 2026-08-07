@@ -9,6 +9,7 @@ services:
     restart: always
     environment:
       SUPABASE_URL: ${SUPABASE_URL}
+      PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
       ANON_KEY: ${ANON_KEY}
       JWT_SECRET: ${JWT_SECRET}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
