@@ -41,7 +41,7 @@ const MapLoadingScreen = ({ onLoadComplete }) => {
         className="mb-4 [&>svg]:text-[#000000]"
         variant="simple"
       />
-      <div className="text-center text-xl text-[#000000] max-w-xs font-semibold">
+      <div className="text-center text-base sm:text-xl text-[#000000] max-w-[85%] sm:max-w-xs font-semibold px-4">
         {loadingText}
       </div>
     </div>
@@ -77,6 +77,7 @@ function getBounds(places, padding = 0.005) {
 const BoundsController = ({ places, selectedPlace, manualDeselect }) => {
   const map = useMap();
   const prevSelectedPlace = useRef(selectedPlace);
+  const prevPlacesKey = useRef(null);
 
   const smoothZoomToAll = () => {
     const bounds = getBounds(places);
@@ -124,6 +125,12 @@ const BoundsController = ({ places, selectedPlace, manualDeselect }) => {
 
   useEffect(() => {
     if (!map || !places || places.length === 0) return;
+
+    const placesKey = places.map((p) => p.place_id).join(",");
+    if (prevPlacesKey.current !== null && prevPlacesKey.current !== placesKey) {
+      prevSelectedPlace.current = null;
+    }
+    prevPlacesKey.current = placesKey;
 
     if (selectedPlace) {
       const lat = selectedPlace.location.lat - 0.001;

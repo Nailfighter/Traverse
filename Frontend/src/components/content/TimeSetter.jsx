@@ -46,7 +46,7 @@ const TimeSetter = ({ time, setTime, isError = false }) => {
     <Dropdown className="min-w-25">
       <DropdownTrigger className="mt-0.5">
         <span
-          className={`text-[14px] font-medium ${
+          className={`text-[13px] sm:text-[14px] font-medium whitespace-nowrap shrink-0 ${
             isError
               ? "text-red-500 hover:text-red-600"
               : "text-subcolor hover:text-black"

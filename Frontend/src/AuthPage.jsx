@@ -250,29 +250,29 @@ const AuthPage = () => {
   return (
     <>
       <div
-        className="bg-cover bg-center h-screen w-full p-20 flex items-center justify-center bg-gray-100"
+        className="bg-cover bg-center min-h-screen w-full p-3 sm:p-6 md:p-20 flex items-center justify-center bg-gray-100"
         style={{
           backgroundImage: `url(${backgroundImage})`,
         }}
       >
-        <div className="w-full h-full rounded-4xl border-8 border-white overflow-hidden flex">
-          <div className="relative flex flex-grow flex-col justify-end  p-10 text-white rounded-r-4xl overflow-visible bg-gradient-to-t from-black/70 via-black/40 to-transparent">
+        <div className="w-full h-full rounded-2xl border-4 sm:rounded-4xl sm:border-8 border-white overflow-hidden flex flex-col md:flex-row">
+          <div className="hidden md:flex relative flex-grow flex-col justify-end  p-10 text-white rounded-r-4xl overflow-visible bg-gradient-to-t from-black/70 via-black/40 to-transparent">
             <CutOut className="absolute top-0 right-0 fill-white" />
             <CutOut className="absolute bottom-0 right-0 rotate-90 fill-white" />
             <div className="z-10">
-              <h1 className="text-6xl font-extrabold tracking-tight">
+              <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight">
                 Travel Smarter.
               </h1>
-              <h2 className="text-2xl font-semibold text-gray-200 mt-2">
+              <h2 className="text-xl lg:text-2xl font-semibold text-gray-200 mt-2">
                 Your next adventure, perfectly mapped.
               </h2>
             </div>
           </div>
-          <div className="w-140 flex flex-col bg-white ">
+          <div className="w-full md:w-140 flex flex-col bg-white ">
             <Logo />
-            <div className=" p-20 pt-10 flex-grow-1 flex flex-col gap-8 justify-center">
+            <div className="p-6 sm:p-10 md:p-20 pt-6 md:pt-10 flex-grow-1 flex flex-col gap-8 justify-center">
               <div className="text-center">
-                <h2 className="text-4xl font-bold">
+                <h2 className="text-3xl sm:text-4xl font-bold">
                   {isSigningUp ? "Create Account" : "Welcome Back"}
                 </h2>
                 <p className="text-gray-500">
@@ -428,7 +428,7 @@ const AuthPage = () => {
 
                 <motion.div
                   layout
-                  className="w-[70%] gap-4 flex flex-col"
+                  className="w-full sm:w-[70%] gap-4 flex flex-col"
                   transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
                 >
                   <Button
@@ -481,7 +481,7 @@ const AuthPage = () => {
                   <hr className="flex-grow border-gray-300" />
                 </div>
 
-                <div className="text-center w-[70%]">
+                <div className="text-center w-full sm:w-[70%]">
                   <p className="text-sm text-gray-500 mb-2">
                     Not sure yet? Try one trip for free without signing up.
                   </p>
@@ -510,7 +510,7 @@ const AuthPage = () => {
         <ModalContent>
           <form onSubmit={handlePasswordResetSubmit}>
             <ModalHeader className="flex flex-col gap-1">
-              <h2 className="text-2xl font-bold">Reset Password</h2>
+              <h2 className="text-xl sm:text-2xl font-bold">Reset Password</h2>
               <p className="text-sm text-gray-500 font-normal">
                 Enter your email address and we'll send you a link to reset your
                 password.

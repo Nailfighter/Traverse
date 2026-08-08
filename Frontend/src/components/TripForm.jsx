@@ -199,6 +199,9 @@ export default function TripForm() {
         size="md"
         isDismissable={!emptyTrips && !isLoading}
         hideCloseButton={emptyTrips}
+        placement="center"
+        scrollBehavior="inside"
+        className="mx-3"
       >
         <ModalContent>
           {(onClose) => (
@@ -233,7 +236,7 @@ export default function TripForm() {
                     isDisabled={isLoading}
                   />
 
-                  <span className="text-sm flex gap-2 w-full justify-between items-center">
+                  <span className="text-sm flex flex-wrap gap-2 w-full justify-between items-center">
                     How many days will you travel?
                     <NumberInput
                       setNumber={setNoOfDays}
@@ -244,7 +247,7 @@ export default function TripForm() {
                     />
                   </span>
 
-                  <span className="text-sm flex gap-2 w-full justify-between items-center">
+                  <span className="text-sm flex flex-wrap gap-2 w-full justify-between items-center">
                     How many people are traveling?
                     <NumberInput
                       setNumber={setNoOfTravelers}
@@ -359,11 +362,11 @@ const BudgetInput = ({ budget, setBudget, disabled }) => {
   };
 
   return (
-    <div className="w-full grid grid-cols-3 gap-4">
+    <div className="w-full grid grid-cols-3 gap-2 sm:gap-4">
       {Object.keys(budgetOptions).map((option, index) => (
         <div
           key={option}
-          className={`w-full flex flex-col gap-1 border-2 rounded-lg p-2 ${
+          className={`w-full flex flex-col gap-1 border-2 rounded-lg p-1.5 sm:p-2 min-w-0 ${
             disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
           } ${
             budget === option
@@ -376,14 +379,14 @@ const BudgetInput = ({ budget, setBudget, disabled }) => {
             {Array.from({ length: index + 1 }).map((_, i) => (
               <CurrencyDollarIcon
                 key={i}
-                className="w-[28px] aspect-square text-[#282f32]"
+                className="w-[20px] sm:w-[28px] aspect-square text-[#282f32]"
               />
             ))}
           </div>
-          <span className="block text-xs font-semibold text-[#282f32]">
+          <span className="block text-xs font-semibold text-[#282f32] text-center sm:text-left">
             {option}
           </span>
-          <span className="text-xs font-medium text-[#81818a]">
+          <span className="text-[10px] sm:text-xs font-medium text-[#81818a] text-center sm:text-left break-words">
             {budgetOptions[option]}
           </span>
         </div>

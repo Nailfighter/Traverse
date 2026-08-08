@@ -16,7 +16,7 @@ const ImageComponent = ({ name, imageData }) => {
   return (
     <img
       alt={name}
-      className="w-28 aspect-square object-cover rounded-2xl shrink-0"
+      className="w-20 sm:w-24 md:w-28 aspect-square object-cover rounded-2xl shrink-0"
       src={imageData}
     />
   );
@@ -24,7 +24,7 @@ const ImageComponent = ({ name, imageData }) => {
 
 const VisitTime = ({ place, start, end }) => {
   const { accessToken, setSelectedPlace } = useContext(AppContext);
-  const { setExtraInfo } = useContext(ExtraInfoContext);
+  const { setExtraInfo, isMobile, setMobileView } = useContext(ExtraInfoContext);
   const [startTime, setStartTime] = useState(start);
   const [endTime, setEndTime] = useState(end);
   const hasUserChangedRef = useRef(false);
@@ -100,9 +100,9 @@ const VisitTime = ({ place, start, end }) => {
   };
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center flex-wrap gap-1 min-w-0">
       <ClockIcon
-        className={`h-5 aspect-square ${
+        className={`h-5 aspect-square shrink-0 ${
           !isTimeValid ? "text-red-500" : "text-subcolor"
         }`}
       />
@@ -123,14 +123,15 @@ const VisitTime = ({ place, start, end }) => {
       />
       <Button
         variant="bordered"
-        className="flex text-xs text-black font-medium border ml-1 h-8 border-bcolor rounded-full"
+        className="flex text-xs text-black font-medium border ml-0 sm:ml-1 h-8 border-bcolor rounded-full shrink-0"
         onPointerDown={(e) => {
           e.stopPropagation();
           e.preventDefault();
         }}
-        onPress={() =>
-          handleDetailClick(accessToken, place, setSelectedPlace, setExtraInfo)
-        }
+        onPress={() => {
+          handleDetailClick(accessToken, place, setSelectedPlace, setExtraInfo);
+          if (isMobile) setMobileView("map");
+        }}
       >
         Details
       </Button>
@@ -192,6 +193,7 @@ const PlaceCard = ({ index, place, setPlaces, showTimeInfo }) => {
         transition,
         opacity: isDragging ? 0.4 : 1,
         cursor: isDragging ? "grabbing" : "",
+        touchAction: "none",
       }}
       {...attributes}
       {...listeners}
@@ -199,7 +201,7 @@ const PlaceCard = ({ index, place, setPlaces, showTimeInfo }) => {
       onMouseLeave={() => setIsHovered(false)}
       className="relative w-full max-w-full"
     >
-      <div className="flex w-full min-w-0 box-border p-4 border gap-2 border-bcolor rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.1)] justify-between bg-white">
+      <div className="flex w-full min-w-0 box-border p-3 sm:p-4 border gap-2 border-bcolor rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.1)] justify-between bg-white">
         <div className="flex flex-col justify-between gap-2 min-w-0 w-full">
           <div>
             <h2
@@ -220,7 +222,7 @@ const PlaceCard = ({ index, place, setPlaces, showTimeInfo }) => {
         <ImageComponent name={place.name} imageData={place?.image || ""} />
       </div>
 
-      <div className="absolute top-[-10px] left-[-10px] rounded-full bg-gray-800 h-6 w-6 text-[12px] font-semibold text-white flex items-center justify-center">
+      <div className="absolute top-[-8px] left-[-8px] rounded-full bg-gray-800 h-6 w-6 text-[12px] font-semibold text-white flex items-center justify-center z-10">
         {index + 1}
       </div>
 

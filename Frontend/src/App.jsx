@@ -47,6 +47,7 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState("1");
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [routes, setRoutes] = useState([]);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const fetchAllTrips = async (token) => {
     try {
@@ -158,11 +159,13 @@ export default function App() {
             setPlaces,
             isAnnonymous,
             setIsAnnonymous,
+            isMobileNavOpen,
+            setIsMobileNavOpen,
           }}
         >
           <div className="flex flex-row w-screen h-screen max-h-screen overflow-hidden">
             <SideBar />
-            <div className="w-full h-full flex flex-col overflow-hidden">
+            <div className="w-full h-full flex flex-col overflow-hidden min-w-0">
               <Header />
               <Layout emptyTrips={emptyTrips} />
             </div>

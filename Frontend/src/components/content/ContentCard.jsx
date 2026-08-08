@@ -31,11 +31,20 @@ const DayTabs = ({ fullItinerary, selectedDay, setSelectedDay }) => {
       className="w-full"
       classNames={{
         tabList: "flex w-full gap-1",
-        tab: "flex-1 justify-center",
+        tab: "flex-1 justify-center min-w-0 px-1 min-[1600px]:px-3",
+        tabContent: "truncate",
       }}
     >
       {days.map((day) => (
-        <Tab key={day} title={`Day ${day}`} />
+        <Tab
+          key={day}
+          title={
+            <>
+              <span className="hidden min-[1600px]:inline">Day </span>
+              {day}
+            </>
+          }
+        />
       ))}
     </Tabs>
   );
@@ -70,26 +79,30 @@ const ContentCard = () => {
 
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden ">
-      <div className="relative flex-grow-0 w-full h-70">
+      <div className="relative flex-grow-0 w-full h-48 sm:h-56 md:h-70">
         <ImageComponent
           name={tripHeader?.destination}
           imageData={tripHeader?.banner || ""}
         />
         <div className="absolute top-0 left-0 w-full h-full bg-black opacity-40"></div>
-        <div className="absolute bottom-0 w-full text-white font-bold text-4xl p-4">
+        <div className="absolute bottom-0 w-full text-white font-bold text-xl sm:text-2xl md:text-4xl p-3 sm:p-4">
           {`${noOfDays} ${noOfDays > 1 ? "Days" : "Day"} in ${
             tripHeader?.destination
           }`}
-          <div className="text-lg font-light flex  mt-2 gap-2">
-            <CalendarDaysIcon className="h-6 aspect-square inline" />
-            {formattedDate(tripHeader?.start_date)} -{" "}
-            {formattedDate(tripHeader?.end_date)}
+          <div className="text-sm sm:text-base md:text-lg font-light flex mt-1 sm:mt-2 gap-2">
+            <CalendarDaysIcon className="h-5 sm:h-6 aspect-square inline shrink-0" />
+            <span className="truncate">
+              {formattedDate(tripHeader?.start_date)} -{" "}
+              {formattedDate(tripHeader?.end_date)}
+            </span>
           </div>
         </div>
       </div>
-      <div className="flex flex-col flex-grow gap-4 p-5 pb-0 h-full overflow-hidden">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Itinerary</h1>
+      <div className="flex flex-col flex-grow gap-3 sm:gap-4 p-3 sm:p-4 md:p-5 pb-0 h-full overflow-hidden">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold shrink-0">
+            Itinerary
+          </h1>
           <AddPlaceForm dayNumber={selectedDay} />
         </div>
         <DayTabs

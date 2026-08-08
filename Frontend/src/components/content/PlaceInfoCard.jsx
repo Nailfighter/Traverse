@@ -26,7 +26,7 @@ import { ExtraInfoContext } from "./Layout";
 const ImageComponent = ({ name, imageData }) => {
   return (
     <img
-      className="h-50 w-full object-cover rounded-xl"
+      className="h-32 sm:h-50 w-full object-cover rounded-xl"
       alt={name}
       src={imageData}
     />
@@ -70,8 +70,8 @@ const HoursOfOperation = ({ weekHours }) => {
   });
 
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-600">
-      <HourglassIcon className="h-4.5 w-4.5" />
+    <div className="flex items-center gap-1.5 sm:gap-2 text-sm text-gray-600 flex-wrap">
+      <HourglassIcon className="h-4.5 w-4.5 shrink-0" />
       {parsedHours.map(({ day, isClosed, hoursOfOperation }, index) => (
         <WeekdayChip
           key={index}
@@ -120,12 +120,12 @@ const PlaceInfoCard = () => {
 
   return (
     extraInfo.visible && (
-      <Card className="absolute bottom-4 left-4 p-2 min-w-140 max-w-170 h-auto">
+      <Card className="absolute left-2 right-2 bottom-2 w-auto max-w-none md:left-4 md:right-auto md:bottom-4 md:w-auto md:min-w-140 md:max-w-170 p-2 h-auto max-h-[70vh] overflow-y-auto md:max-h-none md:overflow-visible">
         <CardBody className="overflow-visible">
           <div className="flex flex-col gap-3">
             <div>
-              <div className="flex justify-between items-center gap-4">
-                <h1 className="text-[24px] font-semibold leading-[1.2] ">
+              <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-4">
+                <h1 className="text-lg sm:text-[24px] font-semibold leading-[1.2] ">
                   {placeDetails.displayName.text}
                 </h1>
                 <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ const PlaceInfoCard = () => {
                   >
                     <Button
                       variant="bordered"
-                      className="flex items-center text-sm font-medium p-2.5  border border-bcolor rounded-full h-10"
+                      className="flex items-center text-xs sm:text-sm font-medium px-2 py-1.5 sm:p-2.5 border border-bcolor rounded-full h-8 sm:h-10 whitespace-nowrap"
                     >
                       <img
                         src="/google-maps.png"
@@ -158,7 +158,7 @@ const PlaceInfoCard = () => {
                 </div>
               </div>
               {isMinimised && placeDetails.rating && (
-                <div className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600">
+                <div className="flex items-center flex-wrap gap-1.5 text-[13px] font-medium text-gray-600">
                   <StarIcon className="h-4 w-4 text-[#fbbc04]" />
                   {placeDetails.rating}
                   <div className="w-0.5 h-0.5 bg-subcolor rounded-full shrink-0" />
@@ -201,23 +201,23 @@ const PlaceInfoCard = () => {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPinIcon className="h-4.5 aspect-square" />
-                  <span>{placeDetails.formattedAddress}</span>
+                  <MapPinIcon className="h-4.5 aspect-square shrink-0" />
+                  <span className="min-w-0 break-words">{placeDetails.formattedAddress}</span>
                 </div>
 
                 {placeDetails.internationalPhoneNumber && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <PhoneIcon className="ml-0.5 h-4 aspect-square" />
-                    <span>{placeDetails.internationalPhoneNumber}</span>
+                    <PhoneIcon className="ml-0.5 h-4 aspect-square shrink-0" />
+                    <span className="min-w-0 break-words">{placeDetails.internationalPhoneNumber}</span>
                   </div>
                 )}
 
                 {placeDetails.websiteUri && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <GlobeAsiaAustraliaIcon className="h-4.5 aspect-square" />
+                    <GlobeAsiaAustraliaIcon className="h-4.5 aspect-square shrink-0" />
                     <a
                       href={placeDetails.websiteUri}
-                      className="text-blue-600 hover:underline overflow-hidden text-ellipsis whitespace-nowrap"
+                      className="min-w-0 text-blue-600 hover:underline overflow-hidden text-ellipsis whitespace-nowrap"
                       target="_blank"
                       rel="noopener noreferrer"
                     >

@@ -143,7 +143,7 @@ const Itinerary = () => {
           items={places.map((p) => p.place_id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="flex flex-col flex-grow gap-4 h-full overflow-y-scroll overflow-hidden p-4 scrollbar-hide ">
+          <div className="flex flex-col flex-grow gap-4 h-full overflow-y-scroll overflow-hidden pt-3 pl-3 pr-2 pb-2 sm:p-4 scrollbar-hide ">
             {places.map((place, index) => (
               <div className="flex flex-col gap-4 w-full " key={place.place_id}>
                 <PlaceCard

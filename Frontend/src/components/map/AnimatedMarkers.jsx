@@ -18,7 +18,7 @@ const lightenColor = (hex, amount = 0.2) => {
 
 export const CustomMarker = ({
   number,
-  width = 35,
+  width = 40,
   color = "#2e2e2e",
   textColor = "white",
   strokeColor = "#262626",

@@ -17,13 +17,19 @@ import {
   Form,
 } from "@heroui/react";
 import { supabase } from "../RouterPage.jsx";
-import { ChevronDownIcon } from "@heroicons/react/24/solid";
+import { ChevronDownIcon, Bars3Icon } from "@heroicons/react/24/solid";
 import { AppContext } from "../App.jsx";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { accessToken, fetchData, currentTrip, isAnnonymous, setIsAnnonymous } =
-    useContext(AppContext);
+  const {
+    accessToken,
+    fetchData,
+    currentTrip,
+    isAnnonymous,
+    setIsAnnonymous,
+    setIsMobileNavOpen,
+  } = useContext(AppContext);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [ppLetters, setPPLetters] = useState("");
@@ -128,17 +134,24 @@ const Header = () => {
   }, []);
 
   return (
-    <div className="flex flex-grow-0 justify-between h-14 p-[6px] w-auto border-b-1 border-bcolor text-[12px] font-semibold">
+    <div className="flex items-center flex-grow-0 justify-between h-14 p-[6px] w-auto border-b-1 border-bcolor text-[12px] font-semibold min-w-0 gap-1">
+      <button
+        className="md:hidden shrink-0 p-2 rounded-full hover:bg-gray-100"
+        onClick={() => setIsMobileNavOpen(true)}
+        aria-label="Open menu"
+      >
+        <Bars3Icon className="h-5 w-5" />
+      </button>
       <Dropdown>
         <DropdownTrigger>
           <DropdownTrigger>
             <Button
               variant="light"
               size="sm"
-              className="rounded-full p-1.5 px-5 w-auto h-auto text-medium font-semibold shrink-0 flex items-center gap-1"
+              className="rounded-full p-1.5 px-3 md:px-5 w-auto h-auto text-medium font-semibold shrink min-w-0 flex items-center gap-1"
             >
-              <h1>{title}</h1>
-              <ChevronDownIcon className="h-4 w-4" />
+              <h1 className="truncate max-w-[60vw] md:max-w-none">{title}</h1>
+              <ChevronDownIcon className="h-4 w-4 shrink-0" />
             </Button>
           </DropdownTrigger>
         </DropdownTrigger>

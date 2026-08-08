@@ -127,7 +127,7 @@ export default function AddPlaceForm({ dayNumber }) {
     <div>
       <Button
         variant="bordered"
-        className={`flex items-center text-sm font-medium p-3 border border-bcolor rounded-full ${
+        className={`flex items-center shrink-0 whitespace-nowrap text-xs sm:text-sm font-medium px-2.5 py-2 sm:p-3 border border-bcolor rounded-full ${
           !isEnabled || isLoading
             ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
             : ""
@@ -135,8 +135,8 @@ export default function AddPlaceForm({ dayNumber }) {
         onPress={handleButtonPress}
         isDisabled={isLoading}
       >
-        <MapPinPlus className="h-5 w-5 mr-1" />
-        Add Place
+        <MapPinPlus className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-1" />
+        <span className="hidden sm:inline">Add Place</span>
       </Button>
 
       <Modal
@@ -146,15 +146,18 @@ export default function AddPlaceForm({ dayNumber }) {
         isKeyboardDismissDisabled={true}
         size="md"
         isDismissable={!isLoading}
+        scrollBehavior="inside"
+        placement="center"
+        className="mx-3"
       >
         <ModalContent>
           {(onClose) => (
             <div>
-              <ModalHeader className="flex flex-col gap-1">
+              <ModalHeader className="flex flex-col gap-1 text-base sm:text-lg">
                 Add a New Place
               </ModalHeader>
 
-              <ModalBody className="h-23">
+              <ModalBody className="h-auto sm:h-23">
                 <Form
                   className="flex flex-col gap-4"
                   validationBehavior="aria"
