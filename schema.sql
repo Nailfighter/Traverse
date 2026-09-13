@@ -37,12 +37,6 @@ create table public.places (
     extra_details jsonb default '{}'::jsonb
 );
 
-create table public.test (
-    id uuid default gen_random_uuid() not null primary key,
-    v text not null,
-    nv time without time zone
-);
-
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('trip-banners', 'trip-banners', true, 5242880, array['image/jpeg','image/jpg','image/png','image/webp'])
 on conflict (id) do nothing;

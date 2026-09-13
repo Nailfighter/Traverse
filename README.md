@@ -90,9 +90,7 @@ The project follows a microservices architecture with three main components:
 - Node.js (for local development)
 - Google Maps API key
 - Google Gemini API key
-- A Supabase backend — pick one of the two paths below
-
-Traverse can run against **either** Supabase Cloud (a hosted project at supabase.com) **or** a self-hosted Supabase stack (`Docker/docker-compose.yml`, gated behind a Compose profile so it's entirely opt-in). Pick one before continuing.
+- A Supabase Cloud project (hosted at supabase.com)
 
 ### Environment Setup
 
@@ -103,7 +101,7 @@ Traverse can run against **either** Supabase Cloud (a hosted project at supabase
    cd Traverse
    ```
 
-2. **Create the shared `.env`** at the repo root (used by `Backend/`, `Frontend/`, and — if you choose that path — the self-hosted Supabase containers). The common vars, regardless of which Supabase path you pick:
+2. **Create the shared `.env`** at the repo root (used by `Backend/` and `Frontend/`):
 
    ```env
    GOOGLE_MAPS_API_KEY=your_google_maps_api_key
@@ -116,16 +114,14 @@ Traverse can run against **either** Supabase Cloud (a hosted project at supabase
    VITE_GOOGLE_MAPS_MAP_ID=your_google_maps_map_id
    ```
 
-   Then add the Supabase-specific vars from **one** of the two sections below.
+3. **Set up Supabase.** Create a project in the [Supabase dashboard](https://supabase.com), then apply `schema.sql` (in the repo root) to it:
 
----
+   - **SQL Editor**: open your project's SQL Editor, paste in the contents of `schema.sql`, and run it.
+   - **Supabase CLI**: `supabase link --project-ref <your-project-ref>` then `psql "$(supabase db url)" -f schema.sql` (or paste it into `supabase db push` via a migration).
 
-#### Option A — Supabase Cloud
+   This creates the `trips`, `days`, and `places` tables plus the `trip-banners` storage bucket.
 
-Use this if you already have (or want) a hosted project at [supabase.com](https://supabase.com) instead of running your own Postgres/Auth/REST containers.
-
-1. Create a project in the Supabase dashboard and apply the schema in `Docker/Supabase/Initial_Schema.sql` to it (SQL Editor, or `supabase db push` against it with the CLI).
-2. Grab your project's URL, anon key, and JWT secret from **Project Settings → API**, and add them to `.env`:
+   Then grab your project's URL, anon key, and JWT secret from **Project Settings → API**, and add them to `.env`:
 
    ```env
    SUPABASE_URL=https://xxxxxxxx.supabase.co
@@ -136,67 +132,12 @@ Use this if you already have (or want) a hosted project at [supabase.com](https:
    VITE_SUPABASE_KEY=your_projects_anon_key
    ```
 
-3. Run just the app containers — the Supabase services are skipped entirely since they're behind a Compose profile:
-
-   ```bash
-   docker compose --env-file .env -f Docker/docker-compose.yml up --build
-   ```
-
----
-
-#### Option B — Self-hosted Supabase (via docker-compose)
-
-Use this if you want Postgres, Auth, REST API, and Studio running as containers alongside `backend`/`frontend`, with no external Supabase account.
-
-1. Add the self-hosted-specific vars to `.env`:
-
-   ```env
-   SUPABASE_URL=https://your-domain/supabase    # routed to supabase-kong externally
-   JWT_SECRET=a_long_random_secret               # signs/verifies every Supabase token — see step 3
-   ANON_KEY=generated_from_jwt_secret             # see step 3
-   SERVICE_ROLE_KEY=generated_from_jwt_secret     # see step 3
-   POSTGRES_PASSWORD=a_strong_random_password
-   SITE_URL=https://your-domain
-   API_EXTERNAL_URL=https://your-domain/supabase
-
-   VITE_SUPABASE_URL=https://your-domain/supabase
-   VITE_SUPABASE_KEY=same_value_as_ANON_KEY
-   ```
-
-   `JWT_SECRET` must be a real random secret, **not** the Supabase demo default (`super-secret-jwt-token-with-at-least-32-characters-long`) — that value is public and would let anyone forge admin tokens against your instance.
-
-2. Generate the Supabase API keys. `ANON_KEY`/`SERVICE_ROLE_KEY` are JWTs signed with `JWT_SECRET`, not arbitrary strings — generate them from your `JWT_SECRET` once, locally:
-
-   ```bash
-   node Docker/Supabase/generateKeys.js
-   ```
-
-   Paste the printed `ANON_KEY`/`SERVICE_ROLE_KEY` into `.env`, and set `VITE_SUPABASE_KEY` to the same `ANON_KEY` value. Re-run this any time `JWT_SECRET` changes — the two must always match.
-
-   The database schema (`trips`, `days`, `places`, `test`, `trip-banners` storage bucket) is applied automatically the first time the `supabase-db` container boots, from `Docker/Supabase/Initial_Schema.sql`.
-
-3. Bring the stack up with the `self-hosted` profile, which is what actually starts the Supabase containers:
-
-   ```bash
-   docker compose --env-file .env -f Docker/docker-compose.yml --profile self-hosted up --build
-   ```
-
-   This brings up `backend`, `frontend`, and `supabase-db`, `supabase-auth`, `supabase-rest`, `supabase-meta`, `supabase-kong`, `supabase-studio`.
-
----
-
 ### Running with Docker (Recommended)
 
-Run from the repo root so the shared `.env` is picked up. Use the plain form for **Option A (Cloud)**:
+Run from the repo root so the shared `.env` is picked up:
 
 ```bash
 docker compose --env-file .env -f Docker/docker-compose.yml up --build
-```
-
-or add `--profile self-hosted` for **Option B (self-hosted Supabase)**:
-
-```bash
-docker compose --env-file .env -f Docker/docker-compose.yml --profile self-hosted up --build
 ```
 
 ### Local Development
@@ -249,13 +190,10 @@ Traverse/
 │   ├── Backend/Dockerfile
 │   ├── Frontend/Dockerfile
 │   ├── Frontend/nginx.conf
-│   ├── Supabase/
-│   │   ├── Initial_Schema.sql  # applied on supabase-db's first boot
-│   │   ├── kong.yml             # API gateway routes for self-hosted Supabase
-│   │   └── generateKeys.js      # derives ANON_KEY/SERVICE_ROLE_KEY from JWT_SECRET
 │   └── docker-compose.yml
 ├── .github/workflows/
 │   └── deploy.yml          # Self-hosted CI/CD deploy workflow
+├── schema.sql              # Supabase schema — apply to your Supabase Cloud project
 └── .env                    # Shared env vars for Backend + Frontend
 ```
 
